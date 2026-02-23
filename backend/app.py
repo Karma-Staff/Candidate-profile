@@ -89,6 +89,12 @@ def allowed_file(filename, folder):
 PERSISTENT_STORAGE = os.getenv('DATABASE_PATH') # Hook into same volume
 if PERSISTENT_STORAGE:
     UPLOAD_BASE = os.path.join(os.path.dirname(PERSISTENT_STORAGE), 'uploads')
+    # Robust check: if we can't write to the persistent volume, fallback to local static folder
+    try:
+        os.makedirs(UPLOAD_BASE, exist_ok=True)
+    except PermissionError:
+        print(f"Warning: Cannot write to {UPLOAD_BASE}. Falling back to static folder for uploads.")
+        UPLOAD_BASE = os.path.join(app.static_folder, 'uploads')
 else:
     UPLOAD_BASE = os.path.join(app.static_folder, 'uploads')
 
@@ -855,7 +861,7 @@ def delete_candidate(id):
                 # Extract filename and construct path within app.static_folder
                 folder = field.split('_')[0] + 's' # avatars, resumes, videos
                 filename = os.path.basename(candidate[field])
-                path = os.path.join(app.static_folder, 'uploads', folder, filename)
+                path = os.path.join(UPLOAD_BASE, folder, filename)
                 if os.path.exists(path):
                     try:
                         os.remove(path)
@@ -907,6 +913,15 @@ def reorder_candidates():
         return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.exception("A 500 internal server error occurred:")
+    return render_template('errors/500.html'), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5001))

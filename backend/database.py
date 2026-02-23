@@ -4,6 +4,16 @@ from werkzeug.security import generate_password_hash
 
 DB_PATH = os.getenv("DATABASE_PATH", "platform.db")
 
+# Ensure the database path is writable, otherwise fallback to local directory
+# This affects the main process (Gunicorn) even if init_db was called separately
+_parent_dir = os.path.dirname(DB_PATH)
+if _parent_dir and _parent_dir != "/":
+    try:
+        os.makedirs(_parent_dir, exist_ok=True)
+    except PermissionError:
+        print(f"Warning: Cannot write to {_parent_dir}. Falling back to local database file.")
+        DB_PATH = os.path.basename(DB_PATH)
+
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -19,16 +29,6 @@ def add_column_safely(cursor, table, column, type_def):
         pass
 
 def init_db():
-    global DB_PATH
-    # Ensure we can write to the directory of DB_PATH
-    parent_dir = os.path.dirname(DB_PATH)
-    if parent_dir and parent_dir != "/":
-        try:
-            os.makedirs(parent_dir, exist_ok=True)
-        except PermissionError:
-            print(f"Warning: Cannot write to {parent_dir}. Falling back to local directory.")
-            DB_PATH = os.path.basename(DB_PATH) # Fallback to current dir
-
     # If using a persistent disk path and the DB doesn't exist, check for seed
     if not os.path.exists(DB_PATH):
         seed_path = os.path.join(os.path.dirname(__file__), "seed_production.db")
