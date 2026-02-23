@@ -34,18 +34,23 @@ def add_column_safely(cursor, table, column, type_def):
         pass
 
 def init_db():
+    print(f"Starting init_db. Current DB_PATH: {os.path.abspath(DB_PATH)}")
+    print(f"Checking if DB exists: {os.path.exists(DB_PATH)}")
+    
     # If using a persistent disk path and the DB doesn't exist, check for seed
     if not os.path.exists(DB_PATH):
-        seed_path = os.path.join(os.path.dirname(__file__), "seed_production.db")
+        seed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_production.db")
+        print(f"DB not found. Looking for seed at: {seed_path}")
         if os.path.exists(seed_path):
             import shutil
             try:
                 print(f"Initializing database from seed: {seed_path} -> {DB_PATH}")
                 shutil.copy(seed_path, DB_PATH)
+                print("Seeding successful.")
             except Exception as e:
                 print(f"Error seeding database: {e}. Starting fresh.")
         else:
-            print(f"No database found at {DB_PATH} and no seed found at {seed_path}. Creating new.")
+            print(f"No seed found at {seed_path}. Creating new empty database.")
 
     conn = get_db_connection()
     cursor = conn.cursor()
