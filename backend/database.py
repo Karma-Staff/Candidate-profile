@@ -19,20 +19,26 @@ def add_column_safely(cursor, table, column, type_def):
         pass
 
 def init_db():
+    global DB_PATH
+    # Ensure we can write to the directory of DB_PATH
+    parent_dir = os.path.dirname(DB_PATH)
+    if parent_dir and parent_dir != "/":
+        try:
+            os.makedirs(parent_dir, exist_ok=True)
+        except PermissionError:
+            print(f"Warning: Cannot write to {parent_dir}. Falling back to local directory.")
+            DB_PATH = os.path.basename(DB_PATH) # Fallback to current dir
+
     # If using a persistent disk path and the DB doesn't exist, check for seed
     if not os.path.exists(DB_PATH):
         seed_path = os.path.join(os.path.dirname(__file__), "seed_production.db")
         if os.path.exists(seed_path):
             import shutil
-            print(f"Initializing database from seed: {seed_path} -> {DB_PATH}")
-            # Ensure directory for DB_PATH exists
             try:
-                parent_dir = os.path.dirname(DB_PATH)
-                if parent_dir and parent_dir != "/":
-                    os.makedirs(parent_dir, exist_ok=True)
-            except PermissionError:
-                print(f"Warning: Permission denied creating directory {parent_dir}. This is expected if the folder is at the root level and already exists or needs a Disk attached.")
-            shutil.copy(seed_path, DB_PATH)
+                print(f"Initializing database from seed: {seed_path} -> {DB_PATH}")
+                shutil.copy(seed_path, DB_PATH)
+            except Exception as e:
+                print(f"Error seeding database: {e}. Starting fresh.")
         else:
             print(f"No database found at {DB_PATH} and no seed found at {seed_path}. Creating new.")
 
