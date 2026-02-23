@@ -94,7 +94,10 @@ else:
 
 UPLOAD_FOLDERS = ['avatars', 'resumes', 'videos']
 for folder in UPLOAD_FOLDERS:
-    os.makedirs(os.path.join(UPLOAD_BASE, folder), exist_ok=True)
+    try:
+        os.makedirs(os.path.join(UPLOAD_BASE, folder), exist_ok=True)
+    except PermissionError:
+        print(f"Warning: Permission denied creating upload folder {folder} in {UPLOAD_BASE}")
 
 # Restoration Talent Intelligence Persona
 BASE_SYSTEM_INSTRUCTION = """

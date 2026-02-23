@@ -26,7 +26,12 @@ def init_db():
             import shutil
             print(f"Initializing database from seed: {seed_path} -> {DB_PATH}")
             # Ensure directory for DB_PATH exists
-            os.makedirs(os.path.dirname(DB_PATH) if os.path.dirname(DB_PATH) else ".", exist_ok=True)
+            try:
+                parent_dir = os.path.dirname(DB_PATH)
+                if parent_dir and parent_dir != "/":
+                    os.makedirs(parent_dir, exist_ok=True)
+            except PermissionError:
+                print(f"Warning: Permission denied creating directory {parent_dir}. This is expected if the folder is at the root level and already exists or needs a Disk attached.")
             shutil.copy(seed_path, DB_PATH)
         else:
             print(f"No database found at {DB_PATH} and no seed found at {seed_path}. Creating new.")
