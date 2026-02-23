@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.5rem;">
+        <div
+            style="width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="user-plus" style="width: 22px; height: 22px; color: white;"></i>
+        </div>
+        <h1 style="margin: 0;">Assign Candidates</h1>
+    </div>
+    <p>Drag and drop candidates to assign them to specific clients</p>
+</div>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: flex-end;" class="animate-in delay-1">
+    <div style="flex: 1;">
+        <label class="form-label"
+            style="text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; display: block;">Select
+            Client</label>
+        <select class="search-input"
+            style="padding: 0.75rem 1rem; cursor: pointer; width: 100%; box-sizing: border-box;" id="clientSelect">
+            <option value="">— Choose a client to begin —</option>
+            <option value="all" style="font-weight: 700; color: #3b82f6;">Choose All</option>
+            {% for c in clients %}
+            <option value="{{ c.id }}">{{ c.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button id="saveBtn" class="btn"
+        style="background: #3b82f6; color: white; padding: 0.75rem 2rem; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; opacity: 0.5; cursor: not-allowed;"
+        disabled>
+        <i data-lucide="save" style="width: 18px;"></i> Save Assigned
+    </button>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;" class="animate-in delay-2">
+    <!-- Available Candidates -->
+    <div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="users" style="width: 18px; color: var(--text-light);"></i>
+                <h3 style="margin: 0; font-size: 1rem;">Available Candidates</h3>
+            </div>
+            <div style="position: relative; width: 200px;">
+                <input type="text" id="availableSearch" placeholder="Search..."
+                    style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; color: white;">
+                <i data-lucide="search"
+                    style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 14px; color: var(--text-lighter);"></i>
+            </div>
+        </div>
+
+        <div id="availableList"
+            style="display: flex; flex-direction: column; gap: 0.5rem; min-height: 400px; padding: 0.5rem; background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.05);">
+            {% for c in candidates %}
+            <div class="candidate-item card" data-id="{{ c.id }}"
+                style="padding: 1rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; transition: all 0.2s;">
+                <i data-lucide="grip-vertical" class="drag-handle"
+                    style="width: 16px; flex-shrink: 0; cursor: grab;"></i>
+                <div
+                    style="width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #1e293b; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    {% if c.avatar_url %}
+                    <img src="{{ c.avatar_url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div
+                        style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; font-weight: bold; font-size: 0.8rem;">
+                        {{ c.name[:2].upper() }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 0.9375rem; color: white; margin-bottom: 0.125rem;">{{
+                        c.name }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--text-lighter);">{{ c.professional_title or
+                        'Candidate' }}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <span style="font-size: 0.8125rem; color: var(--text-lighter); font-weight: 500;">{{
+                        c.experience_years }}yr</span>
+                    <i data-lucide="x" class="remove-btn" onclick="unassignCandidate(this)"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Assigned Candidates -->
+    <div id="assignedColumn">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div
+                    style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="user-plus" style="width: 18px; color: #10b981;"></i>
+                </div>
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: white;">
+                    Assigned to <span id="activeClientName">Client</span>
+                    <span id="assignedCount"
+                        style="font-size: 0.875rem; color: var(--text-lighter); margin-left: 0.5rem;">(0)</span>
+                </h3>
+            </div>
+        </div>
+
+        <div id="assignedList"
+            style="display: flex; flex-direction: column; gap: 0.5rem; min-height: 400px; padding: 0.5rem; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border: 1px dashed rgba(59, 130, 246, 0.2);">
+            <div id="emptyAssigned" style="padding: 4rem 2rem; text-align: center; color: var(--text-lighter);">
+                <i data-lucide="mouse-pointer-2" style="width: 32px; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p style="font-size: 0.875rem;">Drag candidates here to assign</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary View (Hidden by default) -->
+<div id="summaryGrid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 2rem;"
+    class="animate-in">
+    <!-- Rendered by JS -->
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const availableList = document.getElementById('availableList');
+        const assignedList = document.getElementById('assignedList');
+        const clientSelect = document.getElementById('clientSelect');
+        const saveBtn = document.getElementById('saveBtn');
+        const emptyAssigned = document.getElementById('emptyAssigned');
+
+        // Initialize Sortable
+        const sortAvailable = new Sortable(availableList, {
+            group: 'candidates',
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost'
+        });
+
+        const sortAssigned = new Sortable(assignedList, {
+            group: 'candidates',
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            onAdd: function () {
+                updateEmptyState();
+            },
+            onRemove: function () {
+                updateEmptyState();
+            },
+            onEnd: function () {
+                // Ensure UI reflects the new order immediately if needed
+            }
+        });
+
+        function updateEmptyState() {
+            const count = assignedList.querySelectorAll('.candidate-item').length;
+            if (count > 0) {
+                emptyAssigned.style.display = 'none';
+            } else {
+                emptyAssigned.style.display = 'block';
+            }
+
+            // Update header count
+            const countEl = document.getElementById('assignedCount');
+            if (countEl) countEl.textContent = `(${count})`;
+
+            // Update active client name
+            const nameEl = document.getElementById('activeClientName');
+            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+            if (nameEl && selectedOption && clientSelect.value && clientSelect.value !== 'all') {
+                nameEl.textContent = selectedOption.text;
+            }
+        }
+
+        window.unassignCandidate = function (btn) {
+            const item = btn.closest('.candidate-item');
+            availableList.appendChild(item);
+            updateEmptyState();
+        };
+
+        // Handle Client Selection
+        clientSelect.addEventListener('change', async function () {
+            const clientId = this.value;
+            const mainGrid = document.querySelector('.animate-in.delay-2');
+            const summaryGrid = document.getElementById('summaryGrid');
+
+            if (clientId === 'all') {
+                mainGrid.style.display = 'none';
+                summaryGrid.style.display = 'grid';
+                saveBtn.style.display = 'none';
+                loadSummary();
+                return;
+            }
+
+            mainGrid.style.display = 'grid';
+            summaryGrid.style.display = 'none';
+            saveBtn.style.display = 'flex';
+
+            if (!clientId) {
+                saveBtn.disabled = true;
+                saveBtn.style.opacity = '0.5';
+                return;
+            }
+
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+
+            // Fetch current assignments
+            try {
+                const response = await fetch(`/api/assignments/${clientId}`);
+                const assignedCandidates = await response.json();
+
+                // Reset lists
+                const allItems = [...availableList.querySelectorAll('.candidate-item'), ...assignedList.querySelectorAll('.candidate-item')];
+                const assignedIds = assignedCandidates.map(c => c.id.toString());
+
+                allItems.forEach(item => {
+                    const id = item.getAttribute('data-id');
+                    if (assignedIds.includes(id)) {
+                        assignedList.appendChild(item);
+                    } else {
+                        availableList.appendChild(item);
+                    }
+                });
+
+                updateEmptyState();
+            } catch (error) {
+                console.error('Error fetching assignments:', error);
+            }
+        });
+
+        async function loadSummary() {
+            try {
+                const response = await fetch('/api/assignments/summary');
+                const data = await response.json();
+                renderSummary(data);
+            } catch (error) {
+                console.error('Error loading summary:', error);
+            }
+        }
+
+        function renderSummary(data) {
+            const grid = document.getElementById('summaryGrid');
+            grid.innerHTML = data.map(client => {
+                const candidatesHtml = client.candidates.length > 0
+                    ? client.candidates.map(c => `
+                        <div class="summary-candidate-item" data-id="${c.id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 0.875rem; display: flex; align-items: center; gap: 1rem; margin-bottom: 0.625rem; transition: all 0.2s; cursor: grab;">
+                            <div style="width: 36px; height: 36px; border-radius: 10px; overflow: hidden; background: #1e293b; flex-shrink: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                                ${c.avatar_url ? `<img src="${c.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#3b82f6,#8b5cf6); color:white; font-weight:bold; font-size:0.7rem;">${c.name.substring(0, 2).toUpperCase()}</div>`}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 700; font-size: 0.875rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-lighter);">${c.professional_title || 'Candidate'}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 0.75rem; color: var(--text-lighter); font-weight: 500;">${c.experience_years || 0}yr</span>
+                                <i data-lucide="grip-vertical" class="summary-drag-handle" style="width: 14px; color: rgba(255,255,255,0.2);"></i>
+                            </div>
+                        </div>
+                    `).join('')
+                    : `
+                        <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-lighter); display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="user-plus" style="width: 48px; height: 48px; opacity: 0.2;"></i>
+                            <div style="font-size: 0.875rem;">No candidates assigned</div>
+                        </div>
+                    `;
+
+                return `
+                    <div class="summary-card" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; min-height: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.25rem;">
+                            <div>
+                                <h3 style="margin: 0 0 0.125rem 0; font-size: 1.125rem; font-weight: 700; color: white;">${client.username}</h3>
+                                <div style="font-size: 0.8125rem; color: var(--text-lighter);">${client.email || 'No email set'}</div>
+                            </div>
+                            <span style="font-size: 0.6875rem; font-weight: 600; color: white; background: rgba(59, 130, 246, 0.2); padding: 0.25rem 0.625rem; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3);">
+                                ${client.candidates.length} assigned
+                            </span>
+                        </div>
+                        
+                        <div id="summary-cand-list-${client.id}" class="summary-candidate-list" style="flex: 1; overflow-y: auto; padding-right: 0.25rem; margin-bottom: 1.5rem;">
+                            ${candidatesHtml}
+                        </div>
+
+                        <button onclick="manageClientAssignments('${client.id}')" class="btn" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); color: white; font-weight: 600; font-size: 0.8125rem; padding: 0.625rem; border-radius: 8px; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                            Manage Assignments
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Initialize Sortable for each client's candidate list in summary
+            data.forEach(client => {
+                const listEl = document.getElementById(`summary-cand-list-${client.id}`);
+                if (listEl && client.candidates.length > 0) {
+                    new Sortable(listEl, {
+                        group: `summary-${client.id}`,
+                        animation: 150,
+                        handle: '.summary-drag-handle',
+                        ghostClass: 'sortable-ghost',
+                        onEnd: function () {
+                            const candidateIds = [...listEl.querySelectorAll('.summary-candidate-item')].map(item => item.getAttribute('data-id'));
+                            saveSummaryOrder(client.id, candidateIds);
+                        }
+                    });
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        async function saveSummaryOrder(clientId, candidateIds) {
+            try {
+                await fetch('/api/assignments/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: clientId, candidate_ids: candidateIds })
+                });
+            } catch (error) {
+                console.error('Error saving summary order:', error);
+            }
+        }
+
+        window.manageClientAssignments = function (clientId) {
+            clientSelect.value = clientId;
+            clientSelect.dispatchEvent(new Event('change'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // Save Assignments
+        saveBtn.addEventListener('click', async function () {
+            const clientId = clientSelect.value;
+            const candidateIds = [...assignedList.querySelectorAll('.candidate-item')].map(item => item.getAttribute('data-id'));
+
+            this.textContent = 'Saving...';
+            this.disabled = true;
+
+            try {
+                const response = await fetch('/api/assignments/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: clientId, candidate_ids: candidateIds })
+                });
+
+                if (response.ok) {
+                    showToast('Assignments saved successfully!', 'success');
+                } else {
+                    showToast('Failed to save assignments', 'error');
+                }
+            } catch (error) {
+                showToast('Network error', 'error');
+            } finally {
+                this.innerHTML = '<i data-lucide="save" style="width: 18px;"></i> Save Assigned';
+                this.disabled = false;
+                lucide.createIcons();
+            }
+        });
+
+        // Search Filter
+        document.getElementById('availableSearch').addEventListener('input', function (e) {
+            const term = e.target.value.toLowerCase();
+            availableList.querySelectorAll('.candidate-item').forEach(item => {
+                const name = item.querySelector('div').textContent.toLowerCase();
+                item.style.display = name.includes(term) ? 'flex' : 'none';
+            });
+        });
+
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+            toast.innerHTML = `
+                <i data-lucide="${icon}" style="width: 18px;"></i>
+                <span style="font-size: 0.875rem; font-weight: 500;">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    });
+</script>
+
+<style>
+    .sortable-ghost {
+        opacity: 0.4;
+        background: var(--accent) !important;
+        border: 2px dashed var(--accent) !important;
+    }
+
+    #assignedList {
+        counter-reset: cand-counter;
+        background: transparent !important;
+        border: none !important;
+        padding-left: 2.5rem !important;
+    }
+
+    #assignedList .candidate-item {
+        position: relative;
+    }
+
+    #assignedList .candidate-item::before {
+        counter-increment: cand-counter;
+        content: counter(cand-counter) ".";
+        position: absolute;
+        left: -2.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-light);
+    }
+
+    .remove-btn {
+        display: none;
+        color: #ef4444;
+        opacity: 0.4;
+        transition: all 0.2s;
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    #assignedList .remove-btn {
+        display: block;
+    }
+
+    .remove-btn:hover {
+        opacity: 1;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 4px;
+    }
+
+    .candidate-item .drag-handle {
+        opacity: 0.2;
+        transition: opacity 0.2s;
+    }
+
+    .candidate-item:hover .drag-handle {
+        opacity: 0.8;
+    }
+
+    .candidate-item:hover {
+        border-color: #3b82f6 !important;
+        background: rgba(59, 130, 246, 0.08) !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Professional scrollbar for candidate lists */
+    #availableList,
+    #assignedList {
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    #availableList::-webkit-scrollbar,
+    #assignedList::-webkit-scrollbar,
+    .summary-card div::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #availableList::-webkit-scrollbar-track,
+    #assignedList::-webkit-scrollbar-track,
+    .summary-card div::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+    }
+
+    #availableList::-webkit-scrollbar-thumb,
+    #assignedList::-webkit-scrollbar-thumb,
+    .summary-card div::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    #availableList::-webkit-scrollbar-thumb:hover,
+    #assignedList::-webkit-scrollbar-thumb:hover,
+    .summary-card div::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.3);
+    }
+</style>
+{% endblock %}

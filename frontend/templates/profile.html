@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Profile</h1>
+    <p>Manage your account information and view recent activity</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 360px 1fr; gap: 2rem;">
+    <!-- Left Column: User Card -->
+    <div class="card animate-in delay-1" style="align-self: flex-start; position: relative;">
+        <button class="btn-ghost" style="position: absolute; right: 1rem; top: 1rem;">
+            <i data-lucide="edit-3" style="width: 18px; color: var(--accent);"></i>
+        </button>
+
+        <div style="text-align: center; margin-bottom: 2rem; margin-top: 0.5rem;">
+            <div class="avatar avatar-xl avatar-gradient"
+                style="margin: 0 auto 1.25rem auto; border: 4px solid var(--border);">
+                {{ user.username[:2] | upper }}
+            </div>
+            <h2 style="margin-bottom: 0.375rem; font-size: 1.375rem;">{{ user.username }}</h2>
+            <div class="badge badge-{{ user.role }}" style="text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ 'Customer Service' if user.role == 'cs' else user.role | title }}
+            </div>
+        </div>
+
+        <div
+            style="display: flex; flex-direction: column; gap: 0.875rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+            <div
+                style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-light); font-size: 0.875rem;">
+                <i data-lucide="mail" style="width: 16px; flex-shrink: 0;"></i>
+                <span>{{ user.username.replace(' ', '.') | lower }}@restoration.com</span>
+            </div>
+            <div
+                style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-light); font-size: 0.875rem;">
+                <i data-lucide="user" style="width: 16px; flex-shrink: 0;"></i>
+                <span class="badge badge-{{ user.role }}" style="text-transform: uppercase; font-size: 0.6875rem;">
+                    {{ 'Customer Service' if user.role == 'cs' else user.role | title }}
+                </span>
+            </div>
+            <div
+                style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-light); font-size: 0.875rem;">
+                <i data-lucide="calendar" style="width: 16px; flex-shrink: 0;"></i>
+                <span>Member since 2024</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Account Settings -->
+        <div class="card animate-in delay-2">
+            <h3 style="margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="settings" style="width: 18px; color: var(--accent);"></i> Account Settings
+            </h3>
+            <p style="color: var(--text-lighter); font-size: 0.8125rem; margin-bottom: 1.5rem;">Manage your personal
+                information and preferences</p>
+
+            <div
+                style="background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div class="avatar avatar-lg avatar-gradient" style="border: 3px solid var(--border); flex-shrink: 0;">
+                    {{ user.username[:2] | upper }}
+                </div>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Profile Picture</div>
+                    <div style="font-size: 0.75rem; color: var(--text-lighter); margin-bottom: 0.75rem;">Upload a new
+                        avatar. JPG, GIF or PNG. Max 800K</div>
+                    <button class="btn btn-outline" style="padding: 0.375rem 0.875rem; font-size: 0.8125rem;">
+                        <i data-lucide="upload" style="width: 14px;"></i> Upload New
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <div style="position: relative;">
+                        <i data-lucide="user"
+                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
+                        <input type="text" class="search-input" style="padding-left: 2.5rem;"
+                            value="{{ user.username }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <div style="position: relative;">
+                        <i data-lucide="building"
+                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
+                        <input type="text" class="search-input" style="padding-left: 2.5rem;"
+                            placeholder="e.g. Operations">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div style="position: relative;">
+                        <i data-lucide="mail"
+                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
+                        <input type="email" class="search-input" style="padding-left: 2.5rem;"
+                            value="{{ user.username.replace(' ', '.') | lower }}@restoration.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Job Title</label>
+                    <div style="position: relative;">
+                        <i data-lucide="briefcase"
+                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
+                        <input type="text" class="search-input" style="padding-left: 2.5rem;"
+                            placeholder="e.g. Manager">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button class="btn btn-primary" style="padding: 0.625rem 2rem;">Save Changes</button>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;" class="animate-in delay-3">
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+                <div
+                    style="width: 40px; height: 40px; background: var(--accent-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                    <i data-lucide="shield" style="width: 20px; color: var(--accent);"></i>
+                </div>
+                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Security</div>
+                <div style="font-size: 0.75rem; color: var(--text-lighter);">Password, 2FA, Sessions</div>
+            </div>
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+                <div
+                    style="width: 40px; height: 40px; background: var(--success-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                    <i data-lucide="bell" style="width: 20px; color: var(--success);"></i>
+                </div>
+                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Notifications</div>
+                <div style="font-size: 0.75rem; color: var(--text-lighter);">Email, Desktop, Mobile</div>
+            </div>
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+                <div
+                    style="width: 40px; height: 40px; background: var(--warning-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                    <i data-lucide="lock" style="width: 20px; color: var(--warning);"></i>
+                </div>
+                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Privacy</div>
+                <div style="font-size: 0.75rem; color: var(--text-lighter);">Data export, Visibility</div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card animate-in delay-4">
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="clock" style="width: 20px; color: var(--accent);"></i> Recent Activity
+            </h2>
+
+            <div class="timeline">
+                {% for activity in activities %}
+                <div class="timeline-item" style="--delay: {{ loop.index * 0.1 }}s; animation-delay: var(--delay);">
+
+                    <div class="timeline-dot {{ 'active' if activity.active }}"></div>
+                    <div style="display: flex; flex-direction: column; gap: 0.125rem;">
+                        <div style="font-weight: 600; font-size: 0.9375rem;">{{ activity.title }}</div>
+                        {% if activity.subtitle %}
+                        <div style="font-size: 0.8125rem; font-weight: 500; color: var(--text-light);">{{
+                            activity.subtitle }}</div>
+                        {% endif %}
+                        <div style="font-size: 0.8125rem; color: var(--text-lighter);">{{ activity.time }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

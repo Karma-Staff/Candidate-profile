@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-bg" style="display: block; overflow-y: auto; padding: 2rem 0;">
+    <div class="main-container" style="max-width: 900px; margin: 0 auto; padding: 0 1.5rem;">
+        <!-- Header -->
+        <a href="{{ url_for('candidates') }}" class="btn-ghost"
+            style="margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #94a3b8;">
+            <i data-lucide="arrow-left" style="width: 18px;"></i> Back to Dashboard
+        </a>
+
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+            <div
+                style="width: 48px; height: 48px; background: #2b394f; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+                <i data-lucide="user-plus" style="width: 24px; color: #afdaff;"></i>
+            </div>
+            <div>
+                <h1 style="color: white; font-size: 2.5rem; font-weight: 700; margin: 0;">Add Candidate</h1>
+                <p style="color: #94a3b8; margin: 0.25rem 0 0 0;">Fill in the details below to create a new candidate
+                    profile</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('create_candidate') }}" method="POST" enctype="multipart/form-data"
+            id="addCandidateForm">
+            <!-- Section 1: Profile & Documents -->
+            <div class="card"
+                style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 2rem; border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <div
+                        style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="user" style="width: 18px; color: #94a3b8;"></i>
+                    </div>
+                    <div>
+                        <h2 style="color: white; font-size: 1.25rem; font-weight: 600; margin: 0;">Profile & Documents
+                        </h2>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">Upload a profile photo and resume</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
+                    <!-- Photo -->
+                    <div>
+                        <label class="form-label"
+                            style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 1rem; display: block;">Profile
+                            Photo</label>
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div id="avatarPreview"
+                                style="width: 120px; height: 120px; border-radius: 50%; background: #1a273b; border: 2px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; color: #64748b; cursor: pointer; overflow: hidden;"
+                                onclick="document.getElementById('avatarInput').click()">
+                                <i data-lucide="user" style="width: 32px;"></i>
+                                <span style="font-size: 0.75rem;">No Photo</span>
+                            </div>
+                            <input type="file" name="avatar" id="avatarInput" style="display: none;" accept="image/*"
+                                onchange="previewAvatar(this)">
+                            <button type="button" class="btn btn-outline"
+                                style="background: #afdaff; color: #1e293b; border: none; padding: 0.625rem 1.25rem;"
+                                onclick="document.getElementById('avatarInput').click()">
+                                <i data-lucide="upload" style="width: 16px;"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resume -->
+                    <div>
+                        <label class="form-label"
+                            style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 1rem; display: block;">Resume</label>
+                        <div style="height: 120px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(0,0,0,0.1); cursor: pointer;"
+                            onclick="document.getElementById('resumeInput').click()">
+                            <i data-lucide="upload-cloud" style="width: 32px; color: #94a3b8;"></i>
+                            <div style="color: white; font-size: 0.875rem;">Drop or <span
+                                    style="color: #afdaff; text-decoration: underline;">browse</span></div>
+                            <div style="color: #64748b; font-size: 0.75rem;">PDF, DOC, DOCX</div>
+                            <input type="file" name="resume" id="resumeInput" style="display: none;"
+                                accept=".pdf,.doc,.docx" onchange="updateFileName(this, 'resumeName')">
+                            <div id="resumeName" style="color: #afdaff; font-size: 0.75rem; margin-top: 0.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Candidate Recording -->
+            <div class="card"
+                style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 2rem; border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <div
+                        style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="video" style="width: 18px; color: #94a3b8;"></i>
+                    </div>
+                    <div>
+                        <h2 style="color: white; font-size: 1.25rem; font-weight: 600; margin: 0;">Candidate Recording
+                        </h2>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">Upload a video or audio introduction
+                        </p>
+                    </div>
+                </div>
+
+                <label class="form-label"
+                    style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 1rem; display: block;">Video
+                    / Audio Recording</label>
+                <div style="height: 100px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(0,0,0,0.1); cursor: pointer;"
+                    onclick="document.getElementById('videoInput').click()">
+                    <i data-lucide="clapperboard" style="width: 24px; color: #94a3b8;"></i>
+                    <div style="color: white; font-size: 0.875rem;">Drop or <span
+                            style="color: #afdaff; text-decoration: underline;">browse</span> recordings</div>
+                    <input type="file" name="video" id="videoInput" style="display: none;" accept="video/*,audio/*"
+                        onchange="updateFileName(this, 'videoName')">
+                    <div id="videoName" style="color: #afdaff; font-size: 0.75rem; margin-top: 0.5rem;"></div>
+                </div>
+            </div>
+
+            <!-- Section 3: Personal Information -->
+            <div class="card"
+                style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 2rem; border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+                    <div
+                        style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="mail" style="width: 18px; color: #94a3b8;"></i>
+                    </div>
+                    <div>
+                        <h2 style="color: white; font-size: 1.25rem; font-weight: 600; margin: 0;">Personal Information
+                        </h2>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">Name, email, and contact details</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="user" style="width: 16px;"></i> Full Name <span
+                                style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" name="name" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="e.g. John Smith" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="briefcase" style="width: 16px;"></i> Professional Title <span
+                                style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" name="professional_title" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="e.g. Restoration Office Admin" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="mail" style="width: 16px;"></i> Email <span
+                                style="color: #94a3b8; font-size: 0.75rem;">(Private)</span>
+                        </label>
+                        <input type="email" name="email" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="phone" style="width: 16px;"></i> Phone <span
+                                style="color: #94a3b8; font-size: 0.75rem;">(Private)</span>
+                        </label>
+                        <input type="text" name="phone" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="+1 (555) 000-0000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                        <i data-lucide="map-pin" style="width: 16px;"></i> Location <span
+                            style="color: #ef4444;">*</span>
+                    </label>
+                    <div style="position: relative;">
+                        <select name="location" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; appearance: none;">
+                            <option value="">Select a location...</option>
+                            <option value="Noida, India">Noida, India</option>
+                            <option value="Dehradun, India">Dehradun, India</option>
+                            <option value="Delhi, India">Delhi, India</option>
+                            <option value="Remote">Remote</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 18px; color: #94a3b8; pointer-events: none;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Availability & Experience -->
+            <div class="card"
+                style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 2rem; border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+                    <div
+                        style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="calendar" style="width: 18px; color: #94a3b8;"></i>
+                    </div>
+                    <div>
+                        <h2 style="color: white; font-size: 1.25rem; font-weight: 600; margin: 0;">Availability &
+                            Experience</h2>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">Hiring status and years of experience
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="calendar" style="width: 16px;"></i> Availability <span
+                                style="color: #ef4444;">*</span>
+                        </label>
+                        <div style="position: relative;">
+                            <select name="availability" class="login-input"
+                                style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; appearance: none;"
+                                required>
+                                <option value="Immediate Hire">✅ Immediate Hire</option>
+                                <option value="2 Weeks Notice">⌛ 2 Weeks Notice (7-15 Days)</option>
+                                <option value="Specific Date">📅 Specific Date</option>
+                                <option value="Negotiable">🤝 Negotiable</option>
+                                <option value="Hired">🎉 Hired</option>
+                            </select>
+                            <i data-lucide="chevron-down"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 18px; color: #94a3b8; pointer-events: none;"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="briefcase" style="width: 16px;"></i> Experience (Years) <span
+                                style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="number" name="experience_years" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            value="0" min="0" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Professional Details -->
+            <div class="card"
+                style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 2rem; border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+                    <div
+                        style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="sparkles" style="width: 18px; color: #94a3b8;"></i>
+                    </div>
+                    <div>
+                        <h2 style="color: white; font-size: 1.25rem; font-weight: 600; margin: 0;">Professional Details
+                        </h2>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0;">Bio, skills, and interests</p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; color: white; margin-bottom: 0.75rem;">Professional
+                        Bio <span style="color: #ef4444;">*</span></label>
+                    <textarea name="bio" class="login-input"
+                        style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; min-height: 120px; box-sizing: border-box; resize: vertical;"
+                        placeholder="Write a brief professional summary highlighting key achievements, specialties, and career goals..."
+                        required></textarea>
+                    <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem;">This will be displayed on their
+                        candidate card and profile page.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="sparkles" style="width: 16px;"></i> Skills
+                        </label>
+                        <input type="text" name="skills" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="Water Damage, Mold Remediation, IICRC...">
+                        <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem;">Separate with commas</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            <i data-lucide="heart" style="width: 16px;"></i> Hobbies & Interests
+                        </label>
+                        <input type="text" name="hobbies" class="login-input"
+                            style="background: #1a273b; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; width: 100%; box-sizing: border-box;"
+                            placeholder="Fishing, Coding, Hiking...">
+                        <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem;">Separate with commas</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; margin-bottom: 5rem;">
+                <a href="{{ url_for('candidates') }}" class="btn btn-outline"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 0.875rem 2.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 12px;">
+                    <i data-lucide="arrow-left" style="width: 18px;"></i> Cancel
+                </a>
+                <button type="submit" class="btn"
+                    style="background: #afdaff; color: #1e293b; padding: 0.875rem 3rem; font-weight: 600; font-size: 1.125rem; border: none; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="save" style="width: 20px;"></i> Add Candidate
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('avatarPreview');
+                preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function updateFileName(input, targetId) {
+        const fileName = input.files[0] ? input.files[0].name : '';
+        document.getElementById(targetId).textContent = fileName;
+    }
+</script>
+{% endblock %}

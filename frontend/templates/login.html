@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-bg">
+    <!-- Logo Header -->
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Karma Staff Logo"
+            style="height: 120px; width: auto; background: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <form method="POST">
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; color: white; font-weight: 600; margin-bottom: 0.75rem; font-size: 0.9375rem;">Email
+                    or Username</label>
+                <input type="text" name="username" required class="login-input"
+                    placeholder="admin or email@example.com">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label
+                    style="display: block; color: white; font-weight: 600; margin-bottom: 0.75rem; font-size: 0.9375rem;">Password</label>
+                <input type="password" name="password" class="login-input" placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="login-btn">
+                Sign In
+            </button>
+        </form>
+
+        <!-- Demo Accounts Info -->
+        <div style="margin-top: 2.5rem; background: #1e293b; border-radius: 12px; padding: 1.5rem;">
+            <p style="color: white; font-weight: 700; font-size: 0.9375rem; margin-bottom: 1rem;">Demo Accounts:</p>
+            <ul
+                style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; color: white; font-size: 0.9375rem;">
+                <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                    <span>•</span>
+                    <span>Admin: admin@restoration.com</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                    <span>•</span>
+                    <span>CS Team: cs@restoration.com</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                    <span>•</span>
+                    <span>Client: client1@gmail.com</span>
+                </li>
+            </ul>
+            <p style="color: white; font-size: 0.9375rem; margin-top: 0.75rem;">Password: demo123</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

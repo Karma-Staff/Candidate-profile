@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; color: white; padding-bottom: 5rem;">
+    <!-- Breadcrumb -->
+    <div class="animate-in"
+        style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+        <a href="{{ url_for('candidates') }}"
+            style="color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 0.375rem; transition: color 0.2s;">
+            <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Candidates
+        </a>
+    </div>
+
+    <!-- Profile Header Section -->
+    <div class="card animate-in delay-1"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2.5rem; margin-bottom: 1.5rem; border-radius: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <div class="avatar-lg" onclick="openPreview('{{ candidate.avatar_url }}')"
+                    style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid #1e293b; background: #1a273b; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    {% if candidate.avatar_url %}
+                    <img src="{{ candidate.avatar_url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <span style="font-size: 2.5rem; font-weight: 700;">{{ candidate.name[:1] | upper }}</span>
+                    {% endif %}
+                </div>
+                <!-- Info -->
+                <div>
+                    <h1 style="font-size: 2.25rem; font-weight: 700; margin: 0;">{{ candidate.name }}</h1>
+                    <div style="font-size: 1.25rem; color: #afdaff; margin: 0.25rem 0 1rem 0;">{{ candidate.role_type }}
+                    </div>
+                    <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.9375rem; align-items: center;">
+                        <span style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="map-pin"
+                                style="width: 16px;"></i> {{ candidate.location }}</span>
+                        <span style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="briefcase"
+                                style="width: 16px;"></i> {{ candidate.experience_years }} years experience</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Status Badge -->
+            <div style="align-self: flex-start;">
+                <span class="badge"
+                    style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); font-size: 0.75rem; font-weight: 600; padding: 0.5rem 1rem;">
+                    {{ candidate.availability }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; align-items: center;">
+            {# Shared/Conditional Booking/Schedule Button #}
+            {% if user.role == 'client' %}
+            <a href="{{ url_for('meetings') }}" class="btn"
+                style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);">
+                <i data-lucide="calendar" style="width: 18px;"></i> Request Meeting
+            </a>
+            {% else %}
+            <a href="{{ url_for('meetings') }}" class="btn"
+                style="background: #afdaff; color: #1e293b; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none;">
+                <i data-lucide="calendar" style="width: 18px;"></i> Schedule Meeting
+            </a>
+            {% endif %}
+
+            {# View Resume Button (Visible to both) #}
+            <a href="{{ candidate.resume_url if candidate.resume_url else '#' }}" target="_blank"
+                class="btn btn-outline"
+                style="background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; text-decoration: none; transition: all 0.2s;"
+                {% if not candidate.resume_url
+                %}onclick="event.preventDefault(); alert('No resume available for this candidate');" {% endif %}>
+                <i data-lucide="file-text" style="width: 18px;"></i> View Resume
+            </a>
+
+            {# Restricted Admin/CS Buttons #}
+            {% if user.role != 'client' %}
+            <a href="{{ candidate.resume_url or '#' }}" class="btn btn-outline"
+                style="background: #232b38; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; text-decoration: none;"
+                {% if candidate.resume_url %}download{% endif %}>
+                <i data-lucide="download" style="width: 18px;"></i> Download Profile
+            </a>
+            <a href="{{ url_for('edit_candidate_page', id=candidate.id) }}" class="btn btn-outline"
+                style="background: #232b38; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; text-decoration: none;">
+                <i data-lucide="edit-3" style="width: 18px;"></i> Edit Profile
+            </a>
+
+            <form action="{{ url_for('delete_candidate', id=candidate.id) }}" method="POST"
+                onsubmit="return confirm('Are you sure you want to delete this candidate? This action cannot be undone.');"
+                style="display: inline;">
+                <button type="submit" class="btn btn-outline"
+                    style="background: #232b38; border: 1px solid rgba(255,255,255,0.1); color: #ef4444; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                    <i data-lucide="trash-2" style="width: 18px; color: #ef4444;"></i> Delete
+                </button>
+            </form>
+
+            <form action="{{ url_for('hire_candidate', id=candidate.id) }}" method="POST"
+                style="display: inline; margin-left: auto;">
+                <button type="submit" class="btn"
+                    style="background: #e2f2ff; color: #3b82f6; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none;">
+                    <i data-lucide="check-circle-2" style="width: 18px;"></i> Mark as Hired
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="card animate-in delay-2"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Contact Information</h3>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem;">
+            {% if user.role != 'client' %}
+            <div style="display: flex; align-items: center; gap: 1rem; color: #afdaff;">
+                <i data-lucide="mail" style="width: 18px;"></i>
+                <span style="text-decoration: underline;">{{ candidate.email }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem; color: #e2e8f0;">
+                <i data-lucide="phone" style="width: 18px;"></i>
+                <span>{{ candidate.phone or 'Not provided' }}</span>
+            </div>
+            {% else %}
+            <div
+                style="padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
+                <i data-lucide="eye-off" style="width: 24px; color: #94a3b8; margin-bottom: 0.5rem;"></i>
+                <div style="color: #94a3b8; font-size: 0.875rem;">Contact information is hidden for privacy.</div>
+                <div style="color: #afdaff; font-size: 0.8125rem; margin-top: 0.25rem;">Request a meeting to connect.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div
+            style="background: rgba(34, 197, 94, 0.05); color: #22c55e; padding: 0.75rem 1.25rem; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.1); display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
+            <i data-lucide="lock" style="width: 16px;"></i>
+            This information is confidential and logged for compliance
+        </div>
+    </div>
+
+    <!-- Internal Candidate Grading -->
+    <div class="card animate-in delay-2"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+            <i data-lucide="shield" style="width: 20px; color: #afdaff;"></i>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin: 0;">Internal Candidate Grading</h3>
+            <span class="badge"
+                style="background: rgba(168, 85, 247, 0.1); color: #a855f7; font-size: 0.625rem; padding: 0.25rem 0.75rem;">Internal
+                Use Only</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2.5rem;">
+            <!-- Category Helper Function Proxy -->
+            {% set grades = [
+            ('Personality', candidate.personality_grade),
+            ('Accent / Clarity', candidate.accent_grade),
+            ('Professionalism', candidate.accent_grade),
+            ('Technical Skills', candidate.technical_grade)
+            ] %}
+
+            {% for label, score in grades %}
+            <div>
+                <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.75rem;">{{ label }}</div>
+                <div style="display: flex; gap: 0.25rem;">
+                    {% for i in range(1, 6) %}
+                    <i data-lucide="star" class="{% if i <= score %}star-filled{% else %}star-empty{% endif %}"
+                        style="width: 20px; height: 20px;"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="card animate-in delay-3"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">About</h3>
+        <p style="color: #cbd5e1; line-height: 1.7; margin: 0;">
+            {{ candidate.bio or 'No bio provided.' }}
+        </p>
+    </div>
+
+    <!-- Candidate Recording -->
+    <div class="card animate-in delay-3"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
+            <i data-lucide="video" style="width: 20px; color: #afdaff;"></i>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin: 0;">Candidate Recording</h3>
+        </div>
+
+        {% if candidate.video_url %}
+        <div style="width: 100%; border-radius: 12px; overflow: hidden; background: black;">
+            <video controls style="width: 100%;">
+                <source src="{{ candidate.video_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        {% else %}
+        <div
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 0; color: #64748b; background: rgba(0,0,0,0.1); border-radius: 12px;">
+            <i data-lucide="video" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <div style="font-weight: 600; color: #e2e8f0; margin-bottom: 0.25rem;">No recording uploaded yet</div>
+            <div style="font-size: 0.8125rem;">Add a recording via the Edit page</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <!-- Skills -->
+        <div class="card animate-in delay-4"
+            style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; border-radius: 16px;">
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Skills & Certifications</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                {% if candidate.skills %}
+                {% for skill in candidate.skills.split(',') %}
+                <span
+                    style="background: #334155; color: #afdaff; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8125rem;">
+                    {{ skill.strip() }}
+                </span>
+                {% endfor %}
+                {% else %}
+                <span style="color: #64748b; font-size: 0.875rem;">No skills listed</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hobbies -->
+        <div class="card animate-in delay-4"
+            style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; border-radius: 16px;">
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Hobbies & Interests</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                {% if candidate.hobbies %}
+                {% for hobby in candidate.hobbies.split(',') %}
+                <span
+                    style="background: rgba(0,0,0,0.2); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.05); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;">
+                    {{ hobby.strip() }}
+                </span>
+                {% endfor %}
+                {% else %}
+                <span style="color: #64748b; font-size: 0.875rem;">No hobbies listed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Tag/Badge hover effects */
+    .badge:hover,
+    .btn-outline:hover {
+        opacity: 0.9;
+    }
+
+    .btn:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
+
+    .avatar-fallback-gradient {
+        background: linear-gradient(135deg, #1e293b, #334155);
+    }
+
+    .star-filled {
+        fill: #e2e8f0;
+        color: #e2e8f0;
+    }
+
+    .star-empty {
+        color: #475569;
+    }
+</style>
+{% endblock %}

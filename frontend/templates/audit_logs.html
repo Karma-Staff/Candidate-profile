@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1>System Audit Logs</h1>
+        <p>A complete record of access to PII and administrative actions</p>
+    </div>
+    <button class="btn btn-outline">
+        <i data-lucide="download" style="width: 16px;"></i> Export CSV
+    </button>
+</div>
+
+<div class="card animate-in delay-1" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td
+                    style="white-space: nowrap; font-family: 'SF Mono', monospace; font-size: 0.8125rem; color: var(--text-light);">
+                    {{ log.timestamp }}
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.625rem;">
+                        <div class="avatar avatar-sm avatar-gradient" style="font-size: 0.6rem; flex-shrink: 0;">
+                            {{ log.username[:2] | upper }}
+                        </div>
+                        <span style="font-weight: 600;">{{ log.username }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span
+                        class="badge {{ 'badge-info' if 'VIEW' in log.action else 'badge-success' if 'LOGIN' in log.action else 'badge-warning' if 'LOGOUT' in log.action else 'badge-neutral' }}">
+                        {{ log.action }}
+                    </span>
+                </td>
+                <td style="color: var(--text-light);">
+                    {% if log.candidate_name %}
+                    <span style="font-weight: 500;">{{ log.candidate_name }}</span>
+                    <span style="color: var(--text-lighter); font-size: 0.75rem;"> (ID: {{ log.resource_id }})</span>
+                    {% elif log.resource_id %}
+                    ID: {{ log.resource_id }}
+                    {% else %}
+                    <span style="color: var(--text-lighter);">—</span>
+                    {% endif %}
+                </td>
+                <td style="font-family: 'SF Mono', monospace; font-size: 0.75rem; color: var(--text-lighter);">
+                    {{ log.ip_address }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination animate-in delay-2">
+    <button class="page-btn active">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+</div>
+{% endblock %}

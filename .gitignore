@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Environment
+backend/.env
+.env
+
+# Database
+backend/*.db
+!backend/seed_production.db
+
+# Uploads (keep directories, ignore files)
+frontend/static/uploads/avatars/*
+!frontend/static/uploads/avatars/.gitkeep
+frontend/static/uploads/resumes/*
+!frontend/static/uploads/resumes/.gitkeep
+frontend/static/uploads/videos/*
+!frontend/static/uploads/videos/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,8 @@
+flask
+google-generativeai
+python-dotenv
+PyPDF2
+gunicorn
+werkzeug
+bleach
+flask-talisman

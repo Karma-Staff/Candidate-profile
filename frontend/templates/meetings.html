@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1>Meetings</h1>
+            <p>View and manage your scheduled meetings</p>
+        </div>
+    </div>
+</div>
+
+<div class="empty-state animate-in delay-1">
+    <div class="empty-state-icon">
+        <i data-lucide="calendar" style="width: 36px; height: 36px; color: var(--accent);"></i>
+    </div>
+    <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: white;">No meetings scheduled yet</h2>
+    <p style="color: var(--text-light); font-size: 1rem; max-width: 400px; margin: 0 auto;">
+        You will be able to track interviews, follow-ups, and client meetings here once they are scheduled.
+    </p>
+</div>
+{% endblock %}

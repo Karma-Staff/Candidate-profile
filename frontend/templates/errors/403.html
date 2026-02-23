@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+    <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-8">
+        <i data-lucide="shield-off" class="w-10 h-10 text-red-600"></i>
+    </div>
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">403 - Access Forbidden</h1>
+    <p class="text-xl text-gray-600 mb-8">Sorry, you don't have permission to access this resource.</p>
+    <a href="{{ url_for('candidates') }}"
+        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+        Return to Safety
+    </a>
+</div>
+{% endblock %}

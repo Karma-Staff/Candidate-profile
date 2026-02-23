@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .avatar-fallback-gradient {
+        background: linear-gradient(135deg, #1e293b, #334155);
+    }
+
+    /* Simplified Draggable Styles */
+    .sortable-drag {
+        opacity: 0.9;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+        cursor: grabbing !important;
+        z-index: 1000;
+        background: var(--surface-hover) !important;
+        border-color: var(--accent) !important;
+    }
+
+    .sortable-ghost {
+        opacity: 0.1;
+        background: var(--accent-subtle) !important;
+    }
+
+    #candidateGrid a {
+        cursor: grab;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #candidateGrid a:active {
+        cursor: grabbing;
+    }
+
+    body.dragging-active {
+        cursor: grabbing !important;
+        user-select: none;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1>Restore with Us</h1>
+        <p>Browse and connect with top restoration talent</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-celebrate" onclick="triggerCelebration()">
+            <i data-lucide="party-popper" style="width: 16px;"></i> Celebrate
+        </button>
+        {% if user.role != 'client' %}
+        <a href="{{ url_for('add_candidate_page') }}" class="btn btn-primary"
+            style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="plus" style="width: 16px;"></i> Add Candidate
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="search-wrapper animate-in delay-1">
+    <div id="filterForm" style="width: 100%; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="position: relative; width: 100%;">
+            <i data-lucide="search" class="search-icon" style="width: 18px;"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by name, title, or skills..."
+                value="{{ request.args.get('search', '') }}" oninput="updateFilters()">
+        </div>
+
+        <div class="filter-bar animate-in delay-2" style="margin-top: 0;">
+            <div class="filter-group">
+                <i data-lucide="sliders-horizontal" style="width: 16px;"></i>
+                <span>Experience:</span>
+                <select id="experienceFilter" class="filter-select" onchange="updateFilters()">
+                    <option value="All">All</option>
+                    <option value="1+">1+ Years</option>
+                    <option value="3+">3+ Years</option>
+                    <option value="5+">5+ Years</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span>Availability:</span>
+                <select id="availabilityFilter" class="filter-select" onchange="updateFilters()">
+                    <option value="All">All</option>
+                    <option value="Immediate">Immediate</option>
+                    <option value="Next Month">Next Month</option>
+                </select>
+            </div>
+            <div style="margin-left: auto; font-size: 0.8125rem; color: var(--text-lighter);">
+                Showing <strong id="candidateCount" style="color: var(--text);">{{ candidates | length }}</strong>
+                candidates
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="candidate-grid" id="candidateGrid">
+    {% if not candidates %}
+    <div
+        style="grid-column: 1/-1; padding: 8rem 2rem; text-align: center; border-radius: var(--radius-xl); display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeIn 0.8s ease;">
+        <div
+            style="width: 100px; height: 100px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+            <i data-lucide="user-plus" style="width: 48px; height: 48px; color: #475569;"></i>
+        </div>
+        <h3 style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;">
+            {% if user.role == 'client' %}No Candidates Assigned Yet{% else %}No Candidates Found{% endif %}
+        </h3>
+        <p style="color: #94a3b8; max-width: 480px; line-height: 1.6; font-size: 1rem;">
+            {% if user.role == 'client' %}
+            Your account manager will assign candidates tailored to your needs. Please check back soon or contact your
+            account manager.
+            {% else %}
+            Try adjusting your filters or search terms to find what you're looking for.
+            {% endif %}
+        </p>
+    </div>
+    {% else %}
+    {% for c in candidates %}
+    <a href="{{ url_for('candidate_profile', id=c.id) }}" style="text-decoration: none; color: inherit;"
+        data-id="{{ c.id }}">
+        <div class="card card-hover animate-in"
+            style="position: relative; --delay: {{ loop.index0 * 0.08 }}s; animation-delay: var(--delay);">
+
+            <div style="display: flex; gap: 1.25rem;">
+                <div style="flex-shrink: 0;">
+                    <div class="avatar avatar-lg {{ 'avatar-fallback-gradient' if not c.avatar_url else '' }}"
+                        onclick="event.preventDefault(); event.stopPropagation(); openPreview('{{ c.avatar_url }}')"
+                        style="border: 3px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        {% if c.avatar_url %}
+                        <img src="{{ c.avatar_url }}"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
+                        {% else %}
+                        <span style="font-weight: 700; font-size: 1.25rem; color: #afdaff;">{{ c.name[:1] | upper
+                            }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- ... remainder of card content ... -->
+                <div style="flex: 1; min-width: 0;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.375rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700;">{{ c.name }}</h3>
+                        <span
+                            class="badge {% if 'Immediate' in c.availability %}badge-success{% else %}badge-info{% endif %}"
+                            style="font-size: 0.6875rem;">
+                            <i data-lucide="{% if 'Immediate' in c.availability %}check-circle{% else %}clock{% endif %}"
+                                style="width: 10px;"></i> {{ c.availability }}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: 0.25rem;">
+                        {{ c.role_type or c.professional_title }}
+                    </div>
+                    <div style="font-size: 0.8125rem; color: var(--text-lighter); margin-bottom: 1rem;">
+                        {{ c.skills.split(',')[0] if c.skills else 'General Interest' }}
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.8125rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-light);">
+                            <i data-lucide="map-pin" style="width: 13px;"></i> {{ c.location }}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-light);">
+                            <i data-lucide="briefcase" style="width: 13px;"></i> {{ c.experience_years }} years
+                            experience
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                        {% if c.skills %}
+                        {% for skill in c.skills.split(',')[:3] %}
+                        <span class="skill-tag">{{ skill.strip() }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+    window.userRole = "{{ user.role }}";
+
+    function triggerCelebration() {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#f97316', '#3b82f6', '#10b981', '#ffffff']
+        });
+    }
+
+    let filterTimeout;
+
+    async function updateFilters() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(async () => {
+            const search = document.getElementById('searchInput').value;
+            const experience = document.getElementById('experienceFilter').value;
+            const availability = document.getElementById('availabilityFilter').value;
+
+            const params = new URLSearchParams({
+                search: search,
+                experience: experience,
+                availability: availability
+            });
+
+            try {
+                const response = await fetch(`/candidates?${params.toString()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const candidates = await response.json();
+                renderGrid(candidates);
+            } catch (error) {
+                console.error('Error fetching candidates:', error);
+            }
+        }, 300);
+    }
+
+    function renderGrid(candidates) {
+        const grid = document.getElementById('candidateGrid');
+        const count = document.getElementById('candidateCount');
+
+        count.innerText = candidates.length;
+
+        if (candidates.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; padding: 8rem 2rem; text-align: center; border-radius: var(--radius-xl); display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeIn 0.8s ease;">
+                    <div style="width: 100px; height: 100px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                        <i data-lucide="user-plus" style="width: 48px; height: 48px; color: #475569;"></i>
+                    </div>
+                    <h3 style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;">
+                        ${window.userRole === 'client' ? 'No Candidates Assigned Yet' : 'No Candidates Found'}
+                    </h3>
+                    <p style="color: #94a3b8; max-width: 480px; line-height: 1.6; font-size: 1rem;">
+                        ${window.userRole === 'client'
+                    ? 'Your account manager will assign candidates tailored to your needs. Please check back soon or contact your account manager.'
+                    : 'Try adjusting your filters or search terms to find what you\'re looking for.'}
+                    </p>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+
+        grid.innerHTML = candidates.map((c, index) => {
+            const avatarHtml = c.avatar_url
+                ? `<img src="${c.avatar_url}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">`
+                : c.name.substring(0, 1).toUpperCase();
+
+            const avatarBg = !c.avatar_url
+                ? `background: linear-gradient(135deg, hsl(${index * 60}, 60%, 40%), hsl(${index * 60 + 40}, 70%, 50%));`
+                : '';
+
+            const badgeClass = c.availability.includes('Immediate') ? 'badge-success' : 'badge-info';
+            const badgeIcon = c.availability.includes('Immediate') ? 'check-circle' : 'clock';
+
+            const skills = c.skills ? c.skills.split(',').slice(0, 3).map(s => `<span class="skill-tag">${s.trim()}</span>`).join('') : '';
+
+            return `
+                <a href="/candidate/${c.id}" style="text-decoration: none; color: inherit;" data-id="${c.id}">
+                    <div class="card card-hover animate-in" style="position: relative; animation-delay: ${index * 0.05}s;">
+                        <div style="display: flex; gap: 1.25rem;">
+                            <div style="flex-shrink: 0;">
+                                <div class="avatar avatar-lg" 
+                                    onclick="event.preventDefault(); event.stopPropagation(); openPreview('${c.avatar_url}')"
+                                    style="${avatarBg} border: 3px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;"
+                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    ${avatarHtml}
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.375rem;">
+                                    <h3 style="font-size: 1.125rem; font-weight: 700;">${c.name}</h3>
+                                    <span class="badge ${badgeClass}" style="font-size: 0.6875rem;">
+                                        <i data-lucide="${badgeIcon}" style="width: 10px;"></i> ${c.availability}
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: 0.25rem;">
+                                    ${c.role_type || c.professional_title || 'Candidate'}
+                                </div>
+                                <div style="font-size: 0.8125rem; color: var(--text-lighter); margin-bottom: 1rem;">
+                                    ${c.skills ? c.skills.split(',')[0] : 'General Interest'}
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.8125rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-light);">
+                                        <i data-lucide="map-pin" style="width: 13px;"></i> ${c.location}
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-light);">
+                                        <i data-lucide="briefcase" style="width: 13px;"></i> ${c.experience_years} years experience
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                                    ${skills}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }).join('');
+
+        lucide.createIcons();
+    }
+
+    function initSortable() {
+        const grid = document.getElementById('candidateGrid');
+        const searchInput = document.getElementById('searchInput');
+        const experienceFilter = document.getElementById('experienceFilter');
+        const availabilityFilter = document.getElementById('availabilityFilter');
+
+        const isFiltered = (searchInput && searchInput.value) ||
+            (experienceFilter && experienceFilter.value !== 'All') ||
+            (availabilityFilter && availabilityFilter.value !== 'All');
+
+        if (grid && window.userRole !== 'client') {
+            // Destroy existing if any
+            if (window.candidatesSortable) {
+                window.candidatesSortable.destroy();
+            }
+
+            if (isFiltered) {
+                console.log('Sorting disabled while filtered');
+                return;
+            }
+
+            window.candidatesSortable = new Sortable(grid, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                forceFallback: false,
+                onStart: function () {
+                    document.body.classList.add('dragging-active');
+                },
+                onEnd: async function () {
+                    document.body.classList.remove('dragging-active');
+
+                    const order = window.candidatesSortable.toArray();
+                    console.log('New Order:', order);
+
+                    try {
+                        const response = await fetch('/api/candidates/reorder', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ order: order })
+                        });
+
+                        if (response.ok) {
+                            console.log('Order saved successfully');
+                        } else {
+                            console.error('Failed to save order');
+                        }
+                    } catch (error) {
+                        console.error('Error saving order:', error);
+                    }
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initSortable();
+    });
+
+    // Update renderGrid to re-init sortable
+    const originalRenderGrid = renderGrid;
+    renderGrid = function (candidates) {
+        originalRenderGrid(candidates);
+        initSortable();
+    }
+</script>
+{% endblock %}

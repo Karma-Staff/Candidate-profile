@@ -1,0 +1,623 @@
+﻿python : 2026-02-23 21:51:01,580 [INFO] [AUTH] Login success: user id=2 role=cs
+At line:1 char:1
++ python test_app.py 2>&1 | Out-File -FilePath test_failures.txt -Encod ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-02-23 21:5...er id=2 role=cs:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+.2026-02-23 21:51:01,752 [INFO] [AUTH] Login success: user id=6 role=client
+.2026-02-23 21:51:01,925 [INFO] [AUTH] Login success: user id=1 role=admin
+F2026-02-23 21:51:02,086 [INFO] [AUTH] Login success: user id=6 role=client
+F2026-02-23 21:51:02,276 [INFO] [AUTH] Login success: user id=1 role=admin
+2026-02-23 21:51:03,015 [INFO] [AUTH] Login success: user id=9 role=client
+.2026-02-23 21:51:03,213 [INFO] [AUTH] Login success: user id=1 role=admin
+.
+======================================================================
+FAIL: test_login_success_new_theme (__main__.PlatformTestCase.test_login_success_new_theme)
+Test login with the new Admin User name.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Anjan.theeng\OneDrive - Karma Staff\Desktop\candiate\backend\test_app.py", line 24, in 
+test_login_success_new_theme
+    self.assertIn(b'Restore with Us', response.data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'Restore with Us' not found in b'<!DOCTYPE html>\n<html lang="en">\n\n<head>\n    <meta 
+charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Karma Staff 
+\xe2\x80\x94 Restore Talent Platform</title>\n    <meta name="description"\n        content="Karma Staff Talent 
+Platform - Browse and connect with top restoration professionals">\n    <link rel="stylesheet" 
+href="/static/style.css">\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" 
+href="https://fonts.gstatic.com" crossorigin>\n    <link 
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">\n    
+<script src="https://unpkg.com/lucide@latest"></script>\n    <script 
+src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>\n</head>\n\n<body>\n   
+ \n    <header class="header">\n        <div class="logo-section">\n            <a href="/candidates"\n                
+style="display: flex; align-items: center; gap: 0.875rem; text-decoration: none;">\n                <div\n             
+       style="width: 40px; height: 40px; background: white; border-radius: 12px; display: flex; align-items: center; 
+justify-content: center; overflow: hidden; padding: 6px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">\n                
+    <img src="/static/images/logo.png" alt="Karma Staff Logo"\n                        style="width: 100%; height: 
+100%; object-fit: contain;">\n                </div>\n                <span style="font-size: 1.375rem; font-weight: 
+700; color: white; letter-spacing: -0.01em;">Karma\n                    Staff</span>\n            </a>\n        
+</div>\n\n        <button class="mobile-nav-toggle" onclick="toggleMobileNav()">\n            <i data-lucide="menu" 
+style="width: 24px;"></i>\n        </button>\n\n        <nav class="nav-links" id="navLinks">\n            <a 
+href="/candidates" class="nav-item ">\n                <i data-lucide="users" style="width: 18px;"></i> Candidates\n   
+         </a>\n            <a href="/meetings" class="nav-item ">\n                <i data-lucide="calendar" 
+style="width: 18px;"></i> Meetings\n            </a>\n\n            \n            <a href="/admin-dashboard"\n         
+       class="nav-item active">\n                <i data-lucide="layout-dashboard" style="width: 18px;"></i> 
+Dashboard\n            </a>\n            <a href="/assign"\n                class="nav-item ">\n                <i 
+data-lucide="user-plus" style="width: 18px;"></i> Assign\n            </a>\n            <a href="/users"\n             
+   class="nav-item ">\n                <i data-lucide="settings" style="width: 18px;"></i> Users\n            </a>\n   
+         <a href="/ai-agent" class="nav-item ">\n                <i data-lucide="bot" style="width: 18px;"></i> AI 
+Agent\n            </a>\n            \n        </nav>\n\n        <div style="display: flex; align-items: center; gap: 
+1rem;">\n            <div class="dropdown" id="notificationDropdown">\n                <div class="notification-bell" 
+onclick="toggleNotifications()">\n                    <i data-lucide="bell" style="width: 20px; color: 
+var(--text-light);"></i>\n                    <div class="notification-badge" id="notifBadge"></div>\n                
+</div>\n\n                <div class="notifications-dropdown" id="notifContent">\n                    <div 
+class="notifications-header">\n                        <h3>Notifications</h3>\n                        <button 
+class="btn-ghost" onclick="markAllRead()"\n                            style="font-size: 0.75rem; padding: 0.25rem 
+0.5rem;">Mark all as read</button>\n                    </div>\n                    <div id="notifList" 
+style="max-height: 400px; overflow-y: auto;">\n                        <div style="padding: 2rem; text-align: center; 
+color: var(--text-light);">\n                            <p style="font-size: 0.875rem;">Loading 
+notifications...</p>\n                        </div>\n                    </div>\n                    <a 
+href="/notifications" class="view-all-notifications">View all notifications</a>\n                </div>\n            
+</div>\n\n            <div class="dropdown" id="userDropdown">\n                <div onclick="toggleDropdown()" 
+class="avatar avatar-sm avatar-gradient"\n                    style="cursor: pointer; font-size: 0.7rem; overflow: 
+hidden; display: flex; align-items: center; justify-content: center;">\n                    \n                    AD\n 
+                   \n                </div>\n\n                <div class="dropdown-content">\n                    
+<div class="dropdown-header">\n                        <div class="avatar avatar-md avatar-gradient"\n                 
+           style="overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 
+0.9rem;">\n                            \n                            AD\n                            \n                
+        </div>\n                        <div>\n                            <div style="font-weight: 700; font-size: 
+1.0625rem;">admin</div>\n                            <div class="badge badge-admin" style="margin-top: 0.25rem;">\n    
+                            Admin\n                            </div>\n                        </div>\n                
+    </div>\n\n                    <a href="/profile" class="dropdown-item">\n                        <i 
+data-lucide="user" style="width: 18px;"></i>\n                        <span>View Profile</span>\n                    
+</a>\n\n                    <div style="border-top: 1px solid var(--border); margin: 0.25rem 0;"></div>\n\n            
+        <a href="/logout" class="dropdown-item" style="color: var(--danger);">\n                        <i 
+data-lucide="log-out" style="width: 18px;"></i>\n                        <span>Log Out</span>\n                    
+</a>\n                </div>\n            </div>\n        </div>\n    </header>\n    \n\n    <main 
+class="main-container">\n        \n        \n        \n\n        <div id="toast-container"\n            
+style="position: fixed; top: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; 
+pointer-events: none;">\n        </div>\n\n        \n<style>\n    .activity-icon-box[data-category="view"] {\n        
+background: var(--accent-subtle);\n        color: var(--accent);\n    }\n\n    
+.activity-icon-box[data-category="login"] {\n        background: var(--success-subtle);\n        color: 
+var(--success);\n    }\n\n    .activity-icon-box[data-category="logout"] {\n        background: 
+var(--warning-subtle);\n        color: var(--warning);\n    }\n\n    .activity-icon-box[data-category="other"] {\n     
+   background: var(--danger-subtle);\n        color: var(--danger);\n    }\n</style>\n\n<div class="page-header">\n    
+<div style="display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.5rem;">\n        <div\n            
+style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), #818cf8); border-radius: 12px; 
+display: flex; align-items: center; justify-content: center;">\n            <i data-lucide="layout-dashboard" 
+style="width: 22px; height: 22px; color: white;"></i>\n        </div>\n        <h1 style="margin: 0;">Admin 
+Dashboard</h1>\n    </div>\n    <p>Monitor system activity, users, and audit logs</p>\n</div>\n\n<!-- Stats Row 
+-->\n<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; 
+margin-bottom: 2.5rem;"\n    class="animate-in delay-1">\n    <div class="card stat-card accent">\n        <div 
+style="display: flex; justify-content: space-between; align-items: flex-start;">\n            <div>\n                
+<div class="stat-label">Total Audit Logs</div>\n                <div class="stat-value">244</div>\n            
+</div>\n            <div\n                style="width: 44px; height: 44px; background: var(--accent-subtle); 
+border-radius: 12px; display: flex; align-items: center; justify-content: center;">\n                <i 
+data-lucide="file-text" style="width: 22px; color: var(--accent);"></i>\n            </div>\n        </div>\n        
+<div style="margin-top: 0.75rem;">\n            <svg viewBox="0 0 100 30"\n                style="width: 100%; height: 
+30px; fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0.5;">\n                <path d="M0 25 L10 22 L20 
+28 L30 15 L40 20 L50 8 L60 18 L70 5 L80 15 L90 8 L100 12" />\n            </svg>\n        </div>\n    </div>\n\n    
+<div class="card stat-card success">\n        <div style="display: flex; justify-content: space-between; align-items: 
+flex-start;">\n            <div>\n                <div class="stat-label">Active Users</div>\n                <div 
+class="stat-value" style="color: var(--success);">5</div>\n            </div>\n            <div\n                
+style="width: 44px; height: 44px; background: var(--success-subtle); border-radius: 12px; display: flex; align-items: 
+center; justify-content: center;">\n                <i data-lucide="users" style="width: 22px; color: 
+var(--success);"></i>\n            </div>\n        </div>\n        <div style="margin-top: 1rem; font-size: 0.75rem; 
+color: var(--text-lighter);">\n            <span style="color: var(--success);">\xe2\x86\x91 2</span> new this month\n 
+       </div>\n    </div>\n\n    <div class="card stat-card warning">\n        <div style="display: flex; 
+justify-content: space-between; align-items: flex-start;">\n            <div>\n                <div 
+class="stat-label">Total Candidates</div>\n                <div class="stat-value" style="color: 
+var(--warning);">7</div>\n            </div>\n            <div\n                style="width: 44px; height: 44px; 
+background: var(--warning-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: 
+center;">\n                <i data-lucide="user-check" style="width: 22px; color: var(--warning);"></i>\n            
+</div>\n        </div>\n        <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-lighter);">\n      
+      All available for hire\n        </div>\n    </div>\n</div>\n\n<!-- Recent Activity -->\n<div class="card 
+animate-in delay-2">\n    <div style="display: flex; justify-content: space-between; align-items: center; 
+margin-bottom: 1.5rem;">\n        <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">\n           
+ <i data-lucide="activity" style="width: 20px; color: var(--accent);"></i> Recent Activity\n        </h2>\n        
+<button class="btn btn-outline" style="font-size: 0.8125rem;">\n            <i data-lucide="external-link" 
+style="width: 14px;"></i> View All\n        </button>\n    </div>\n\n    <div style="display: flex; flex-direction: 
+column; gap: 0.75rem;">\n        \n        <div class="animate-in"\n            style="--delay: 0.06s; 
+animation-delay: var(--delay); padding: 1.125rem; background: var(--glass); border: 1px solid transparent; 
+border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; transition: all 
+0.2s; cursor: default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="login"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="log-in"\n                        style="width: 16px;"></i>\n                </div>\n\n\n         
+       <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n      
+                  Login\n                    </div>\n                    <div style="font-size: 0.75rem; color: 
+var(--text-lighter);">\n                        sarah\n                        \n                    </div>\n\n        
+        </div>\n            </div>\n            <div style="text-align: right;">\n                <div 
+style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                </div>\n           
+     <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:06</div>\n            </div>\n        </div>\n  
+      \n        <div class="animate-in"\n            style="--delay: 0.12s; animation-delay: var(--delay); padding: 
+1.125rem; background: var(--glass); border: 1px solid transparent; border-radius: var(--radius); display: flex; 
+justify-content: space-between; align-items: center; transition: all 0.2s; cursor: default;"\n            
+onmouseover="this.style.borderColor=\'var(--border)\'; this.style.background=\'var(--glass-strong)\'"\n            
+onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'var(--glass)\'">\n            <div 
+style="display: flex; align-items: center; gap: 1rem;">\n                \n                <div 
+class="activity-icon-box" data-category="login"\n                    style="width: 36px; height: 36px; border-radius: 
+10px; display: flex; align-items: center; justify-content: center;">\n                    <i data-lucide="log-in"\n    
+                    style="width: 16px;"></i>\n                </div>\n\n\n                <div>\n                    
+<div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n                        Login\n         
+           </div>\n                    <div style="font-size: 0.75rem; color: var(--text-lighter);">\n                 
+       client1\n                        \n                    </div>\n\n                </div>\n            </div>\n   
+         <div style="text-align: right;">\n                <div style="font-size: 0.75rem; font-weight: 500; color: 
+var(--text-light);">2026-02-23\n                </div>\n                <div style="font-size: 0.6875rem; color: 
+var(--text-lighter);">16:06</div>\n            </div>\n        </div>\n        \n        <div class="animate-in"\n     
+       style="--delay: 0.18s; animation-delay: var(--delay); padding: 1.125rem; background: var(--glass); border: 1px 
+solid transparent; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; 
+transition: all 0.2s; cursor: default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="login"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="log-in"\n                        style="width: 16px;"></i>\n                </div>\n\n\n         
+       <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n      
+                  Login\n                    </div>\n                    <div style="font-size: 0.75rem; color: 
+var(--text-lighter);">\n                        admin\n                        \n                    </div>\n\n        
+        </div>\n            </div>\n            <div style="text-align: right;">\n                <div 
+style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                </div>\n           
+     <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:06</div>\n            </div>\n        </div>\n  
+      \n        <div class="animate-in"\n            style="--delay: 0.24s; animation-delay: var(--delay); padding: 
+1.125rem; background: var(--glass); border: 1px solid transparent; border-radius: var(--radius); display: flex; 
+justify-content: space-between; align-items: center; transition: all 0.2s; cursor: default;"\n            
+onmouseover="this.style.borderColor=\'var(--border)\'; this.style.background=\'var(--glass-strong)\'"\n            
+onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'var(--glass)\'">\n            <div 
+style="display: flex; align-items: center; gap: 1rem;">\n                \n                <div 
+class="activity-icon-box" data-category="logout"\n                    style="width: 36px; height: 36px; border-radius: 
+10px; display: flex; align-items: center; justify-content: center;">\n                    <i data-lucide="log-out"\n   
+                     style="width: 16px;"></i>\n                </div>\n\n\n                <div>\n                    
+<div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n                        Logout\n        
+            </div>\n                    <div style="font-size: 0.75rem; color: var(--text-lighter);">\n                
+        admin\n                        \n                    </div>\n\n                </div>\n            </div>\n    
+        <div style="text-align: right;">\n                <div style="font-size: 0.75rem; font-weight: 500; color: 
+var(--text-light);">2026-02-23\n                </div>\n                <div style="font-size: 0.6875rem; color: 
+var(--text-lighter);">16:05</div>\n            </div>\n        </div>\n        \n        <div class="animate-in"\n     
+       style="--delay: 0.3s; animation-delay: var(--delay); padding: 1.125rem; background: var(--glass); border: 1px 
+solid transparent; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; 
+transition: all 0.2s; cursor: default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="login"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="log-in"\n                        style="width: 16px;"></i>\n                </div>\n\n\n         
+       <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n      
+                  Login\n                    </div>\n                    <div style="font-size: 0.75rem; color: 
+var(--text-lighter);">\n                        TestUserSuccess\n                        \n                    
+</div>\n\n                </div>\n            </div>\n            <div style="text-align: right;">\n                
+<div style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                </div>\n      
+          <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:05</div>\n            </div>\n        
+</div>\n        \n        <div class="animate-in"\n            style="--delay: 0.36s; animation-delay: var(--delay); 
+padding: 1.125rem; background: var(--glass); border: 1px solid transparent; border-radius: var(--radius); display: 
+flex; justify-content: space-between; align-items: center; transition: all 0.2s; cursor: default;"\n            
+onmouseover="this.style.borderColor=\'var(--border)\'; this.style.background=\'var(--glass-strong)\'"\n            
+onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'var(--glass)\'">\n            <div 
+style="display: flex; align-items: center; gap: 1rem;">\n                \n                <div 
+class="activity-icon-box" data-category="login"\n                    style="width: 36px; height: 36px; border-radius: 
+10px; display: flex; align-items: center; justify-content: center;">\n                    <i data-lucide="log-in"\n    
+                    style="width: 16px;"></i>\n                </div>\n\n\n                <div>\n                    
+<div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n                        Login\n         
+           </div>\n                    <div style="font-size: 0.75rem; color: var(--text-lighter);">\n                 
+       admin\n                        \n                    </div>\n\n                </div>\n            </div>\n     
+       <div style="text-align: right;">\n                <div style="font-size: 0.75rem; font-weight: 500; color: 
+var(--text-light);">2026-02-23\n                </div>\n                <div style="font-size: 0.6875rem; color: 
+var(--text-lighter);">16:05</div>\n            </div>\n        </div>\n        \n        <div class="animate-in"\n     
+       style="--delay: 0.42s; animation-delay: var(--delay); padding: 1.125rem; background: var(--glass); border: 1px 
+solid transparent; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; 
+transition: all 0.2s; cursor: default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="login"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="log-in"\n                        style="width: 16px;"></i>\n                </div>\n\n\n         
+       <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n      
+                  Login\n                    </div>\n                    <div style="font-size: 0.75rem; color: 
+var(--text-lighter);">\n                        admin\n                        \n                    </div>\n\n        
+        </div>\n            </div>\n            <div style="text-align: right;">\n                <div 
+style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                </div>\n           
+     <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:05</div>\n            </div>\n        </div>\n  
+      \n        <div class="animate-in"\n            style="--delay: 0.48s; animation-delay: var(--delay); padding: 
+1.125rem; background: var(--glass); border: 1px solid transparent; border-radius: var(--radius); display: flex; 
+justify-content: space-between; align-items: center; transition: all 0.2s; cursor: default;"\n            
+onmouseover="this.style.borderColor=\'var(--border)\'; this.style.background=\'var(--glass-strong)\'"\n            
+onmouseout="this.style.borderColor=\'transparent\'; this.style.background=\'var(--glass)\'">\n            <div 
+style="display: flex; align-items: center; gap: 1rem;">\n                \n                <div 
+class="activity-icon-box" data-category="login"\n                    style="width: 36px; height: 36px; border-radius: 
+10px; display: flex; align-items: center; justify-content: center;">\n                    <i data-lucide="log-in"\n    
+                    style="width: 16px;"></i>\n                </div>\n\n\n                <div>\n                    
+<div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n                        Login\n         
+           </div>\n                    <div style="font-size: 0.75rem; color: var(--text-lighter);">\n                 
+       client1\n                        \n                    </div>\n\n                </div>\n            </div>\n   
+         <div style="text-align: right;">\n                <div style="font-size: 0.75rem; font-weight: 500; color: 
+var(--text-light);">2026-02-23\n                </div>\n                <div style="font-size: 0.6875rem; color: 
+var(--text-lighter);">16:05</div>\n            </div>\n        </div>\n        \n        <div class="animate-in"\n     
+       style="--delay: 0.54s; animation-delay: var(--delay); padding: 1.125rem; background: var(--glass); border: 1px 
+solid transparent; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; 
+transition: all 0.2s; cursor: default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="view"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="eye"\n                        style="width: 16px;"></i>\n                </div>\n\n\n            
+    <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n         
+               View Candidate Profile\n                    </div>\n                    <div style="font-size: 0.75rem; 
+color: var(--text-lighter);">\n                        client1\n                         \xe2\x80\xa2 Gagan Rana\n     
+               </div>\n\n                </div>\n            </div>\n            <div style="text-align: right;">\n    
+            <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                
+</div>\n                <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:05</div>\n            
+</div>\n        </div>\n        \n        <div class="animate-in"\n            style="--delay: 0.6s; animation-delay: 
+var(--delay); padding: 1.125rem; background: var(--glass); border: 1px solid transparent; border-radius: 
+var(--radius); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; cursor: 
+default;"\n            onmouseover="this.style.borderColor=\'var(--border)\'; 
+this.style.background=\'var(--glass-strong)\'"\n            onmouseout="this.style.borderColor=\'transparent\'; 
+this.style.background=\'var(--glass)\'">\n            <div style="display: flex; align-items: center; gap: 1rem;">\n   
+             \n                <div class="activity-icon-box" data-category="login"\n                    style="width: 
+36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">\n              
+      <i data-lucide="log-in"\n                        style="width: 16px;"></i>\n                </div>\n\n\n         
+       <div>\n                    <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">\n      
+                  Login\n                    </div>\n                    <div style="font-size: 0.75rem; color: 
+var(--text-lighter);">\n                        admin\n                        \n                    </div>\n\n        
+        </div>\n            </div>\n            <div style="text-align: right;">\n                <div 
+style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">2026-02-23\n                </div>\n           
+     <div style="font-size: 0.6875rem; color: var(--text-lighter);">16:05</div>\n            </div>\n        </div>\n  
+      \n    </div>\n</div>\n\n    </main>\n\n    \n    <footer class="footer">\n        <p>\xc2\xa9 2026 Karma Staff. 
+All rights reserved.</p>\n    </footer>\n    \n\n    <!-- Global Image Preview Modal -->\n    <div 
+id="imagePreviewModal" class="modal-overlay"\n        style="display: none; z-index: 10000; background: 
+rgba(0,0,0,0.9); cursor: zoom-out;" onclick="closePreview()">\n        <button class="btn-ghost"\n            
+style="position: absolute; right: 2rem; top: 2rem; color: white; padding: 1rem; z-index: 10001;"\n            
+onclick="closePreview()">\n            <i data-lucide="x" style="width: 32px; height: 32px;"></i>\n        </button>\n 
+       <div\n            style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: 
+center; padding: 2rem;">\n            <img id="previewImage" src=""\n                style="max-width: 90%; 
+max-height: 90%; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: 
+scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);"\n                
+onclick="event.stopPropagation()">\n        </div>\n    </div>\n\n    <!-- First-Time Login Welcome Overlay -->\n    
+\n\n    <script>\n        lucide.createIcons();\n\n        // Welcome Overlay Logic\n        
+document.addEventListener(\'DOMContentLoaded\', () => {\n            if (document.body.dataset.showWelcome !== 
+\'true\') {\n                const overlay = document.getElementById(\'welcomeOverlay\');\n                if 
+(overlay) overlay.remove(); // Remove the overlay if not needed\n                return;\n            }\n\n            
+const text = "Welcome... Let\'s start your journey with Karma Staff to find the dream candidate for you";\n            
+const container = document.getElementById(\'welcomeText\');\n            if (!container) return;\n            let i = 
+0;\n\n            // Trigger Confetti immediately\n            if (typeof confetti === \'function\') {\n               
+ confetti({\n                    particleCount: 150,\n                    spread: 100,\n                    origin: { 
+y: 0.5 },\n                    colors: [\'#3b82f6\', \'#10b981\', \'#f59e0b\', \'#ffffff\']\n                });\n     
+       }\n\n            function typeWriter() {\n                if (i < text.length) {\n                    
+container.innerHTML += text.charAt(i);\n                    i++;\n                    setTimeout(typeWriter, 50);\n    
+            } else {\n                    const cursor = document.getElementById(\'typewriterCursor\');\n              
+      if (cursor) cursor.style.display = \'none\';\n                    // Auto-dismiss after 8 seconds if not 
+clicked\n                    setTimeout(dismissWelcome, 8000);\n                }\n            }\n\n            
+setTimeout(typeWriter, 1200);\n            document.body.style.overflow = \'hidden\';\n        });\n\n        async 
+function dismissWelcome() {\n            const overlay = document.getElementById(\'welcomeOverlay\');\n            if 
+(!overlay) return;\n\n            overlay.style.opacity = \'0\';\n            overlay.style.transition = \'opacity 
+0.6s ease\';\n\n            try {\n                await fetch(\'/api/mark-welcome-seen\', { method: \'POST\' });\n    
+        } catch (e) { console.error(\'Failed to mark welcome as seen\'); }\n\n            setTimeout(() => {\n         
+       overlay.remove();\n                document.body.style.overflow = \'auto\';\n            }, 600);\n        
+}\n\n\n        function toggleDropdown() {\n            
+document.getElementById(\'userDropdown\').classList.toggle(\'show\');\n            
+document.getElementById(\'notifContent\').classList.remove(\'show\');\n        }\n\n        // Global Image Preview 
+Functions\n        function openPreview(src) {\n            if (!src || src === \'#\') return;\n            const 
+modal = document.getElementById(\'imagePreviewModal\');\n            const img = 
+document.getElementById(\'previewImage\');\n            img.src = src;\n            modal.style.display = \'flex\';\n  
+          setTimeout(() => {\n                img.style.transform = \'scale(1)\';\n            }, 10);\n            
+document.body.style.overflow = \'hidden\';\n            lucide.createIcons();\n        }\n\n        function 
+closePreview() {\n            const modal = document.getElementById(\'imagePreviewModal\');\n            const img = 
+document.getElementById(\'previewImage\');\n            img.style.transform = \'scale(0.9)\';\n            
+setTimeout(() => {\n                modal.style.display = \'none\';\n                document.body.style.overflow = 
+\'auto\';\n            }, 200);\n        }\n\n        function toggleNotifications() {\n            const content = 
+document.getElementById(\'notifContent\');\n            const isOpening = !content.classList.contains(\'show\');\n     
+       content.classList.toggle(\'show\');\n            
+document.getElementById(\'userDropdown\').classList.remove(\'show\');\n\n            if (isOpening) {\n                
+fetchNotifications();\n            }\n        }\n\n        function toggleMobileNav() {\n            
+document.getElementById(\'navLinks\').classList.toggle(\'open\');\n        }\n\n        async function 
+fetchNotifications() {\n            const list = document.getElementById(\'notifList\');\n            try {\n          
+      const response = await fetch(\'/api/notifications\');\n                const data = await response.json();\n\n   
+             if (data.notifications && data.notifications.length > 0) {\n                    list.innerHTML = 
+data.notifications.map(n => `\n                        <div class="notification-item ${n.is_read ? \'\' : \'unread\'}" 
+onclick="markAsRead(${n.id})">\n                            <div class="notification-icon">\n                          
+      <i data-lucide="${n.type === \'meeting\' ? \'calendar\' : \'info\'}" style="width: 20px;"></i>\n                 
+           </div>\n                            <div class="notification-content">\n                                
+<h4>${n.title}</h4>\n                                <p>${n.message}</p>\n                                <span 
+class="time">${n.time_ago}</span>\n                            </div>\n                        </div>\n                
+    `).join(\'\');\n\n                    const hasUnread = data.notifications.some(n => !n.is_read);\n                
+    document.getElementById(\'notifBadge\').classList.toggle(\'active\', hasUnread);\n                } else {\n       
+             list.innerHTML = \'<div style="padding: 3rem 2rem; text-align: center; color: var(--text-lighter);"><i 
+data-lucide="bell-off" style="width: 32px; height: 32px; margin-bottom: 1rem; opacity: 0.5;"></i><p style="font-size: 
+0.875rem;">No notifications yet</p></div>\';\n                    
+document.getElementById(\'notifBadge\').classList.remove(\'active\');\n                }\n                
+lucide.createIcons();\n            } catch (error) {\n                list.innerHTML = \'<div style="padding: 2rem; 
+text-align: center; color: var(--error);"><p style="font-size: 0.875rem;">Failed to load notifications</p></div>\';\n  
+          }\n        }\n\n        async function markAsRead(id) {\n            try {\n                await 
+fetch(`/api/notifications/mark-read/${id}`, { method: \'POST\' });\n                fetchNotifications();\n            
+} catch (error) {\n                console.error(\'Failed to mark as read\');\n            }\n        }\n\n        
+async function markAllRead() {\n            try {\n                await fetch(\'/api/notifications/mark-all-read\', { 
+method: \'POST\' });\n                document.getElementById(\'notifBadge\').classList.remove(\'active\');\n          
+      fetchNotifications();\n            } catch (error) {\n                console.error(\'Failed to mark all as 
+read\');\n            }\n        }\n\n        // Initial check for badge\n        fetchNotifications();\n\n        
+window.onclick = function (event) {\n            if (!event.target.closest(\'#userDropdown\') && 
+!event.target.closest(\'.avatar\')) {\n                var d = document.getElementById(\'userDropdown\');\n            
+    if (d) d.classList.remove(\'show\');\n            }\n            if 
+(!event.target.closest(\'#notificationDropdown\') && !event.target.closest(\'.notification-bell\')) {\n                
+var n = document.getElementById(\'notifContent\');\n                if (n) n.classList.remove(\'show\');\n            
+}\n            if (!event.target.closest(\'.mobile-nav-toggle\') && !event.target.closest(\'#navLinks\')) {\n          
+      var nav = document.getElementById(\'navLinks\');\n                if (nav) nav.classList.remove(\'open\');\n     
+       }\n        }\n    </script>\n</body>\n\n</html>'
+
+======================================================================
+FAIL: test_pii_masking_dark_theme (__main__.PlatformTestCase.test_pii_masking_dark_theme)
+Verify sensitive data is hidden for clients.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Anjan.theeng\OneDrive - Karma Staff\Desktop\candiate\backend\test_app.py", line 60, in 
+test_pii_masking_dark_theme
+    self.assertIn(b'Book Appointment', response.data)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'Book Appointment' not found in b'<!DOCTYPE html>\n<html lang="en">\n\n<head>\n    <meta 
+charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Karma Staff 
+\xe2\x80\x94 Restore Talent Platform</title>\n    <meta name="description"\n        content="Karma Staff Talent 
+Platform - Browse and connect with top restoration professionals">\n    <link rel="stylesheet" 
+href="/static/style.css">\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" 
+href="https://fonts.gstatic.com" crossorigin>\n    <link 
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">\n    
+<script src="https://unpkg.com/lucide@latest"></script>\n    <script 
+src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>\n</head>\n\n<body>\n   
+ \n    <header class="header">\n        <div class="logo-section">\n            <a href="/candidates"\n                
+style="display: flex; align-items: center; gap: 0.875rem; text-decoration: none;">\n                <div\n             
+       style="width: 40px; height: 40px; background: white; border-radius: 12px; display: flex; align-items: center; 
+justify-content: center; overflow: hidden; padding: 6px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">\n                
+    <img src="/static/images/logo.png" alt="Karma Staff Logo"\n                        style="width: 100%; height: 
+100%; object-fit: contain;">\n                </div>\n                <span style="font-size: 1.375rem; font-weight: 
+700; color: white; letter-spacing: -0.01em;">Karma\n                    Staff</span>\n            </a>\n        
+</div>\n\n        <button class="mobile-nav-toggle" onclick="toggleMobileNav()">\n            <i data-lucide="menu" 
+style="width: 24px;"></i>\n        </button>\n\n        <nav class="nav-links" id="navLinks">\n            <a 
+href="/candidates" class="nav-item ">\n                <i data-lucide="users" style="width: 18px;"></i> Candidates\n   
+         </a>\n            <a href="/meetings" class="nav-item ">\n                <i data-lucide="calendar" 
+style="width: 18px;"></i> Meetings\n            </a>\n\n            \n            <a href="/ai-agent" class="nav-item 
+">\n                <i data-lucide="sparkles" style="width: 18px;"></i> Recruiter AI\n            </a>\n            \n 
+       </nav>\n\n        <div style="display: flex; align-items: center; gap: 1rem;">\n            <div 
+class="dropdown" id="notificationDropdown">\n                <div class="notification-bell" 
+onclick="toggleNotifications()">\n                    <i data-lucide="bell" style="width: 20px; color: 
+var(--text-light);"></i>\n                    <div class="notification-badge" id="notifBadge"></div>\n                
+</div>\n\n                <div class="notifications-dropdown" id="notifContent">\n                    <div 
+class="notifications-header">\n                        <h3>Notifications</h3>\n                        <button 
+class="btn-ghost" onclick="markAllRead()"\n                            style="font-size: 0.75rem; padding: 0.25rem 
+0.5rem;">Mark all as read</button>\n                    </div>\n                    <div id="notifList" 
+style="max-height: 400px; overflow-y: auto;">\n                        <div style="padding: 2rem; text-align: center; 
+color: var(--text-light);">\n                            <p style="font-size: 0.875rem;">Loading 
+notifications...</p>\n                        </div>\n                    </div>\n                    <a 
+href="/notifications" class="view-all-notifications">View all notifications</a>\n                </div>\n            
+</div>\n\n            <div class="dropdown" id="userDropdown">\n                <div onclick="toggleDropdown()" 
+class="avatar avatar-sm avatar-gradient"\n                    style="cursor: pointer; font-size: 0.7rem; overflow: 
+hidden; display: flex; align-items: center; justify-content: center;">\n                    \n                    CL\n 
+                   \n                </div>\n\n                <div class="dropdown-content">\n                    
+<div class="dropdown-header">\n                        <div class="avatar avatar-md avatar-gradient"\n                 
+           style="overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 
+0.9rem;">\n                            \n                            CL\n                            \n                
+        </div>\n                        <div>\n                            <div style="font-weight: 700; font-size: 
+1.0625rem;">client1</div>\n                            <div class="badge badge-client" style="margin-top: 0.25rem;">\n 
+                               Client\n                            </div>\n                        </div>\n            
+        </div>\n\n                    <a href="/profile" class="dropdown-item">\n                        <i 
+data-lucide="user" style="width: 18px;"></i>\n                        <span>View Profile</span>\n                    
+</a>\n\n                    <div style="border-top: 1px solid var(--border); margin: 0.25rem 0;"></div>\n\n            
+        <a href="/logout" class="dropdown-item" style="color: var(--danger);">\n                        <i 
+data-lucide="log-out" style="width: 18px;"></i>\n                        <span>Log Out</span>\n                    
+</a>\n                </div>\n            </div>\n        </div>\n    </header>\n    \n\n    <main 
+class="main-container">\n        \n        \n        \n\n        <div id="toast-container"\n            
+style="position: fixed; top: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; 
+pointer-events: none;">\n        </div>\n\n        \n<div style="max-width: 1000px; margin: 0 auto; color: white; 
+padding-bottom: 5rem;">\n    <!-- Breadcrumb -->\n    <div class="animate-in"\n        style="margin-bottom: 2rem; 
+display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">\n        <a href="/candidates"\n            
+style="color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 0.375rem; transition: color 
+0.2s;">\n            <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Candidates\n        </a>\n    
+</div>\n\n    <!-- Profile Header Section -->\n    <div class="card animate-in delay-1"\n        style="background: 
+#2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2.5rem; margin-bottom: 1.5rem; border-radius: 20px;">\n    
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">\n    
+        <div style="display: flex; align-items: center; gap: 2rem;">\n                <div class="avatar-lg" 
+onclick="openPreview(\'/static/uploads/avatars/Gagan_Rana_openart-image_b5MMZmmE_1765553433998_raw.jpg\')"\n           
+         style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid #1e293b; 
+background: #1a273b; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; 
+transition: transform 0.2s;"\n                    onmouseover="this.style.transform=\'scale(1.05)\'" 
+onmouseout="this.style.transform=\'scale(1)\'">\n                    \n                    <img 
+src="/static/uploads/avatars/Gagan_Rana_openart-image_b5MMZmmE_1765553433998_raw.jpg" style="width: 100%; height: 
+100%; object-fit: cover;">\n                    \n                </div>\n                <!-- Info -->\n              
+  <div>\n                    <h1 style="font-size: 2.25rem; font-weight: 700; margin: 0;">Gagan Rana</h1>\n            
+        <div style="font-size: 1.25rem; color: #afdaff; margin: 0.25rem 0 1rem 0;">Office Admin\n                    
+</div>\n                    <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.9375rem; align-items: 
+center;">\n                        <span style="display: flex; align-items: center; gap: 0.5rem;"><i 
+data-lucide="map-pin"\n                                style="width: 16px;"></i> Noida, India</span>\n                 
+       <span style="display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="briefcase"\n                     
+           style="width: 16px;"></i> 10 years experience</span>\n                    </div>\n                </div>\n  
+          </div>\n            <!-- Status Badge -->\n            <div style="align-self: flex-start;">\n               
+ <span class="badge"\n                    style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid 
+rgba(34, 197, 94, 0.2); font-size: 0.75rem; font-weight: 600; padding: 0.5rem 1rem;">\n                    Immediate 
+Hire\n                </span>\n            </div>\n        </div>\n\n        <!-- Action Buttons -->\n        <div 
+style="display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; align-items: center;">\n            \n           
+ \n            <a href="/meetings" class="btn"\n                style="background: #22c55e; color: white; padding: 
+0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; 
+text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);">\n                <i data-lucide="calendar" 
+style="width: 18px;"></i> Request Meeting\n            </a>\n            \n\n            \n            <a 
+href="/static/uploads/resumes/sample_resume.pdf" target="_blank"\n                class="btn btn-outline"\n            
+    style="background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.75rem 1.5rem; 
+border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; text-decoration: none; 
+transition: all 0.2s;"\n                >\n                <i data-lucide="file-text" style="width: 18px;"></i> View 
+Resume\n            </a>\n\n            \n            \n        </div>\n    </div>\n\n    <!-- Contact Information 
+-->\n    <div class="card animate-in delay-2"\n        style="background: #2b394f; border: 1px solid 
+rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">\n        <h3 style="font-size: 
+1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Contact Information</h3>\n        <div style="display: flex; 
+flex-direction: column; gap: 1.25rem; margin-bottom: 2rem;">\n            \n            <div\n                
+style="padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; text-align: center; border: 1px dashed 
+rgba(255,255,255,0.1);">\n                <i data-lucide="eye-off" style="width: 24px; color: #94a3b8; margin-bottom: 
+0.5rem;"></i>\n                <div style="color: #94a3b8; font-size: 0.875rem;">Contact information is hidden for 
+privacy.</div>\n                <div style="color: #afdaff; font-size: 0.8125rem; margin-top: 0.25rem;">Request a 
+meeting to connect.\n                </div>\n            </div>\n            \n        </div>\n        <div\n          
+  style="background: rgba(34, 197, 94, 0.05); color: #22c55e; padding: 0.75rem 1.25rem; border-radius: 10px; border: 
+1px solid rgba(34, 197, 94, 0.1); display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">\n           
+ <i data-lucide="lock" style="width: 16px;"></i>\n            This information is confidential and logged for 
+compliance\n        </div>\n    </div>\n\n    <!-- Internal Candidate Grading -->\n    <div class="card animate-in 
+delay-2"\n        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 
+1.5rem; border-radius: 16px;">\n        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 
+2rem;">\n            <i data-lucide="shield" style="width: 20px; color: #afdaff;"></i>\n            <h3 
+style="font-size: 1.25rem; font-weight: 600; margin: 0;">Internal Candidate Grading</h3>\n            <span 
+class="badge"\n                style="background: rgba(168, 85, 247, 0.1); color: #a855f7; font-size: 0.625rem; 
+padding: 0.25rem 0.75rem;">Internal\n                Use Only</span>\n        </div>\n\n        <div style="display: 
+grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2.5rem;">\n            <!-- Category Helper 
+Function Proxy -->\n            \n\n            \n            <div>\n                <div style="font-size: 0.875rem; 
+color: #94a3b8; margin-bottom: 0.75rem;">Personality</div>\n                <div style="display: flex; gap: 
+0.25rem;">\n                    \n                    <i data-lucide="star" class="star-filled"\n                      
+  style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n                    \n           
+         <i data-lucide="star" class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n  
+                  \n                    <i data-lucide="star" class="star-filled"\n                        
+style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-empty"\n                        style="width: 20px; height: 20px;"></i>\n                    \n            
+    </div>\n            </div>\n            \n            <div>\n                <div style="font-size: 0.875rem; 
+color: #94a3b8; margin-bottom: 0.75rem;">Accent / Clarity</div>\n                <div style="display: flex; gap: 
+0.25rem;">\n                    \n                    <i data-lucide="star" class="star-filled"\n                      
+  style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n                    \n           
+         <i data-lucide="star" class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n  
+                  \n                    <i data-lucide="star" class="star-filled"\n                        
+style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-empty"\n                        style="width: 20px; height: 20px;"></i>\n                    \n            
+    </div>\n            </div>\n            \n            <div>\n                <div style="font-size: 0.875rem; 
+color: #94a3b8; margin-bottom: 0.75rem;">Professionalism</div>\n                <div style="display: flex; gap: 
+0.25rem;">\n                    \n                    <i data-lucide="star" class="star-filled"\n                      
+  style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n                    \n           
+         <i data-lucide="star" class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n  
+                  \n                    <i data-lucide="star" class="star-filled"\n                        
+style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-empty"\n                        style="width: 20px; height: 20px;"></i>\n                    \n            
+    </div>\n            </div>\n            \n            <div>\n                <div style="font-size: 0.875rem; 
+color: #94a3b8; margin-bottom: 0.75rem;">Technical Skills</div>\n                <div style="display: flex; gap: 
+0.25rem;">\n                    \n                    <i data-lucide="star" class="star-filled"\n                      
+  style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n                    \n           
+         <i data-lucide="star" class="star-filled"\n                        style="width: 20px; height: 20px;"></i>\n  
+                  \n                    <i data-lucide="star" class="star-filled"\n                        
+style="width: 20px; height: 20px;"></i>\n                    \n                    <i data-lucide="star" 
+class="star-empty"\n                        style="width: 20px; height: 20px;"></i>\n                    \n            
+    </div>\n            </div>\n            \n        </div>\n    </div>\n\n    <!-- About Section -->\n    <div 
+class="card animate-in delay-3"\n        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); 
+padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">\n        <h3 style="font-size: 1.25rem; font-weight: 600; 
+margin-bottom: 1.5rem;">About</h3>\n        <p style="color: #cbd5e1; line-height: 1.7; margin: 0;">\n            
+Veteran in office management.\n        </p>\n    </div>\n\n    <!-- Candidate Recording -->\n    <div class="card 
+animate-in delay-3"\n        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; 
+margin-bottom: 1.5rem; border-radius: 16px;">\n        <div style="display: flex; align-items: center; gap: 0.75rem; 
+margin-bottom: 2rem;">\n            <i data-lucide="video" style="width: 20px; color: #afdaff;"></i>\n            <h3 
+style="font-size: 1.25rem; font-weight: 600; margin: 0;">Candidate Recording</h3>\n        </div>\n\n        \n        
+<div\n            style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 
+4rem 0; color: #64748b; background: rgba(0,0,0,0.1); border-radius: 12px;">\n            <i data-lucide="video" 
+style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>\n            <div style="font-weight: 600; 
+color: #e2e8f0; margin-bottom: 0.25rem;">No recording uploaded yet</div>\n            <div style="font-size: 
+0.8125rem;">Add a recording via the Edit page</div>\n        </div>\n        \n    </div>\n\n    <div style="display: 
+grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">\n        <!-- Skills -->\n        <div class="card animate-in 
+delay-4"\n            style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; 
+border-radius: 16px;">\n            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Skills & 
+Certifications</h3>\n            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">\n                \n       
+         \n                <span\n                    style="background: #334155; color: #afdaff; border: 1px solid 
+rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8125rem;">\n                    
+Customer relationship\n                </span>\n                \n                <span\n                    
+style="background: #334155; color: #afdaff; border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 1rem; 
+border-radius: 20px; font-size: 0.8125rem;">\n                    Marketing\n                </span>\n                
+\n                <span\n                    style="background: #334155; color: #afdaff; border: 1px solid 
+rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8125rem;">\n                    
+Revenue Management\n                </span>\n                \n                \n            </div>\n        
+</div>\n\n        <!-- Hobbies -->\n        <div class="card animate-in delay-4"\n            style="background: 
+#2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; border-radius: 16px;">\n            <h3 
+style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Hobbies & Interests</h3>\n            <div 
+style="display: flex; flex-wrap: wrap; gap: 0.75rem;">\n                \n                \n                <span\n    
+                style="background: rgba(0,0,0,0.2); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.05); padding: 
+0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 
+0.02em;">\n                    Travel\n                </span>\n                \n                \n            
+</div>\n        </div>\n    </div>\n</div>\n\n<style>\n    /* Tag/Badge hover effects */\n    .badge:hover,\n    
+.btn-outline:hover {\n        opacity: 0.9;\n    }\n\n    .btn:hover {\n        filter: brightness(1.1);\n        
+transform: translateY(-1px);\n        transition: all 0.2s ease;\n    }\n\n    .avatar-fallback-gradient {\n        
+background: linear-gradient(135deg, #1e293b, #334155);\n    }\n\n    .star-filled {\n        fill: #e2e8f0;\n        
+color: #e2e8f0;\n    }\n\n    .star-empty {\n        color: #475569;\n    }\n</style>\n\n    </main>\n\n    \n    
+<footer class="footer">\n        <p>\xc2\xa9 2026 Karma Staff. All rights reserved.</p>\n    </footer>\n    \n\n    
+<!-- Global Image Preview Modal -->\n    <div id="imagePreviewModal" class="modal-overlay"\n        style="display: 
+none; z-index: 10000; background: rgba(0,0,0,0.9); cursor: zoom-out;" onclick="closePreview()">\n        <button 
+class="btn-ghost"\n            style="position: absolute; right: 2rem; top: 2rem; color: white; padding: 1rem; 
+z-index: 10001;"\n            onclick="closePreview()">\n            <i data-lucide="x" style="width: 32px; height: 
+32px;"></i>\n        </button>\n        <div\n            style="width: 100%; height: 100%; display: flex; 
+align-items: center; justify-content: center; padding: 2rem;">\n            <img id="previewImage" src=""\n            
+    style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px 
+rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);"\n               
+ onclick="event.stopPropagation()">\n        </div>\n    </div>\n\n    <!-- First-Time Login Welcome Overlay -->\n    
+\n\n    <script>\n        lucide.createIcons();\n\n        // Welcome Overlay Logic\n        
+document.addEventListener(\'DOMContentLoaded\', () => {\n            if (document.body.dataset.showWelcome !== 
+\'true\') {\n                const overlay = document.getElementById(\'welcomeOverlay\');\n                if 
+(overlay) overlay.remove(); // Remove the overlay if not needed\n                return;\n            }\n\n            
+const text = "Welcome... Let\'s start your journey with Karma Staff to find the dream candidate for you";\n            
+const container = document.getElementById(\'welcomeText\');\n            if (!container) return;\n            let i = 
+0;\n\n            // Trigger Confetti immediately\n            if (typeof confetti === \'function\') {\n               
+ confetti({\n                    particleCount: 150,\n                    spread: 100,\n                    origin: { 
+y: 0.5 },\n                    colors: [\'#3b82f6\', \'#10b981\', \'#f59e0b\', \'#ffffff\']\n                });\n     
+       }\n\n            function typeWriter() {\n                if (i < text.length) {\n                    
+container.innerHTML += text.charAt(i);\n                    i++;\n                    setTimeout(typeWriter, 50);\n    
+            } else {\n                    const cursor = document.getElementById(\'typewriterCursor\');\n              
+      if (cursor) cursor.style.display = \'none\';\n                    // Auto-dismiss after 8 seconds if not 
+clicked\n                    setTimeout(dismissWelcome, 8000);\n                }\n            }\n\n            
+setTimeout(typeWriter, 1200);\n            document.body.style.overflow = \'hidden\';\n        });\n\n        async 
+function dismissWelcome() {\n            const overlay = document.getElementById(\'welcomeOverlay\');\n            if 
+(!overlay) return;\n\n            overlay.style.opacity = \'0\';\n            overlay.style.transition = \'opacity 
+0.6s ease\';\n\n            try {\n                await fetch(\'/api/mark-welcome-seen\', { method: \'POST\' });\n    
+        } catch (e) { console.error(\'Failed to mark welcome as seen\'); }\n\n            setTimeout(() => {\n         
+       overlay.remove();\n                document.body.style.overflow = \'auto\';\n            }, 600);\n        
+}\n\n\n        function toggleDropdown() {\n            
+document.getElementById(\'userDropdown\').classList.toggle(\'show\');\n            
+document.getElementById(\'notifContent\').classList.remove(\'show\');\n        }\n\n        // Global Image Preview 
+Functions\n        function openPreview(src) {\n            if (!src || src === \'#\') return;\n            const 
+modal = document.getElementById(\'imagePreviewModal\');\n            const img = 
+document.getElementById(\'previewImage\');\n            img.src = src;\n            modal.style.display = \'flex\';\n  
+          setTimeout(() => {\n                img.style.transform = \'scale(1)\';\n            }, 10);\n            
+document.body.style.overflow = \'hidden\';\n            lucide.createIcons();\n        }\n\n        function 
+closePreview() {\n            const modal = document.getElementById(\'imagePreviewModal\');\n            const img = 
+document.getElementById(\'previewImage\');\n            img.style.transform = \'scale(0.9)\';\n            
+setTimeout(() => {\n                modal.style.display = \'none\';\n                document.body.style.overflow = 
+\'auto\';\n            }, 200);\n        }\n\n        function toggleNotifications() {\n            const content = 
+document.getElementById(\'notifContent\');\n            const isOpening = !content.classList.contains(\'show\');\n     
+       content.classList.toggle(\'show\');\n            
+document.getElementById(\'userDropdown\').classList.remove(\'show\');\n\n            if (isOpening) {\n                
+fetchNotifications();\n            }\n        }\n\n        function toggleMobileNav() {\n            
+document.getElementById(\'navLinks\').classList.toggle(\'open\');\n        }\n\n        async function 
+fetchNotifications() {\n            const list = document.getElementById(\'notifList\');\n            try {\n          
+      const response = await fetch(\'/api/notifications\');\n                const data = await response.json();\n\n   
+             if (data.notifications && data.notifications.length > 0) {\n                    list.innerHTML = 
+data.notifications.map(n => `\n                        <div class="notification-item ${n.is_read ? \'\' : \'unread\'}" 
+onclick="markAsRead(${n.id})">\n                            <div class="notification-icon">\n                          
+      <i data-lucide="${n.type === \'meeting\' ? \'calendar\' : \'info\'}" style="width: 20px;"></i>\n                 
+           </div>\n                            <div class="notification-content">\n                                
+<h4>${n.title}</h4>\n                                <p>${n.message}</p>\n                                <span 
+class="time">${n.time_ago}</span>\n                            </div>\n                        </div>\n                
+    `).join(\'\');\n\n                    const hasUnread = data.notifications.some(n => !n.is_read);\n                
+    document.getElementById(\'notifBadge\').classList.toggle(\'active\', hasUnread);\n                } else {\n       
+             list.innerHTML = \'<div style="padding: 3rem 2rem; text-align: center; color: var(--text-lighter);"><i 
+data-lucide="bell-off" style="width: 32px; height: 32px; margin-bottom: 1rem; opacity: 0.5;"></i><p style="font-size: 
+0.875rem;">No notifications yet</p></div>\';\n                    
+document.getElementById(\'notifBadge\').classList.remove(\'active\');\n                }\n                
+lucide.createIcons();\n            } catch (error) {\n                list.innerHTML = \'<div style="padding: 2rem; 
+text-align: center; color: var(--error);"><p style="font-size: 0.875rem;">Failed to load notifications</p></div>\';\n  
+          }\n        }\n\n        async function markAsRead(id) {\n            try {\n                await 
+fetch(`/api/notifications/mark-read/${id}`, { method: \'POST\' });\n                fetchNotifications();\n            
+} catch (error) {\n                console.error(\'Failed to mark as read\');\n            }\n        }\n\n        
+async function markAllRead() {\n            try {\n                await fetch(\'/api/notifications/mark-all-read\', { 
+method: \'POST\' });\n                document.getElementById(\'notifBadge\').classList.remove(\'active\');\n          
+      fetchNotifications();\n            } catch (error) {\n                console.error(\'Failed to mark all as 
+read\');\n            }\n        }\n\n        // Initial check for badge\n        fetchNotifications();\n\n        
+window.onclick = function (event) {\n            if (!event.target.closest(\'#userDropdown\') && 
+!event.target.closest(\'.avatar\')) {\n                var d = document.getElementById(\'userDropdown\');\n            
+    if (d) d.classList.remove(\'show\');\n            }\n            if 
+(!event.target.closest(\'#notificationDropdown\') && !event.target.closest(\'.notification-bell\')) {\n                
+var n = document.getElementById(\'notifContent\');\n                if (n) n.classList.remove(\'show\');\n            
+}\n            if (!event.target.closest(\'.mobile-nav-toggle\') && !event.target.closest(\'#navLinks\')) {\n          
+      var nav = document.getElementById(\'navLinks\');\n                if (nav) nav.classList.remove(\'open\');\n     
+       }\n        }\n    </script>\n</body>\n\n</html>'
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.812s
+
+FAILED (failures=2)
