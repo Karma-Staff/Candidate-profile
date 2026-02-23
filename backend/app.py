@@ -189,6 +189,45 @@ def extract_text_from_pdf(pdf_path):
 
 # --- Routes ---
 
+@app.route('/debug/health')
+def health_check():
+    from database import DB_PATH
+    status = {
+        "database_path": DB_PATH,
+        "database_exists": os.path.exists(DB_PATH),
+        "upload_base": UPLOAD_BASE,
+        "env_db_path": os.getenv('DATABASE_PATH'),
+        "cwd": os.getcwd()
+    }
+    try:
+        conn = get_db_connection()
+        user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        status["db_connection"] = "OK"
+        status["user_count"] = user_count
+        conn.close()
+    except Exception as e:
+        status["db_connection"] = f"ERROR: {str(e)}"
+    
+    # Test writability of current DB dir
+    try:
+        test_file = os.path.join(os.path.dirname(os.path.abspath(DB_PATH)), ".health_test")
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+        status["db_dir_writable"] = True
+    except Exception as e:
+        status["db_dir_writable"] = f"FALSE: {str(e)}"
+
+    return jsonify({
+        "status": status,
+        "security": {
+            "secret_key_set": app.secret_key != 'default-unsafe-key-change-this-in-env',
+            "session_secure": app.config.get('SESSION_COOKIE_SECURE'),
+            "flask_debug": os.getenv('FLASK_DEBUG'),
+            "force_https": force_https
+        }
+    })
+
 @app.route('/')
 def index():
     user = get_current_user()
