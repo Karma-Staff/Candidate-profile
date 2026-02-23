@@ -92,7 +92,12 @@ if PERSISTENT_STORAGE:
     # Robust check: if we can't write to the persistent volume, fallback to local static folder
     try:
         os.makedirs(UPLOAD_BASE, exist_ok=True)
-    except PermissionError:
+        # Active check: can we actually write here?
+        test_file = os.path.join(UPLOAD_BASE, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+    except Exception:
         print(f"Warning: Cannot write to {UPLOAD_BASE}. Falling back to static folder for uploads.")
         UPLOAD_BASE = os.path.join(app.static_folder, 'uploads')
 else:

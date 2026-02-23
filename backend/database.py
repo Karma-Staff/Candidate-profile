@@ -10,8 +10,13 @@ _parent_dir = os.path.dirname(DB_PATH)
 if _parent_dir and _parent_dir != "/":
     try:
         os.makedirs(_parent_dir, exist_ok=True)
-    except PermissionError:
-        print(f"Warning: Cannot write to {_parent_dir}. Falling back to local database file.")
+        # Active check: can we actually write here?
+        test_file = os.path.join(_parent_dir, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+    except Exception:
+        print(f"Warning: Directory {_parent_dir} is not writable. Falling back to local database file.")
         DB_PATH = os.path.basename(DB_PATH)
 
 def get_db_connection():
