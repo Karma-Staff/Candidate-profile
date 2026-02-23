@@ -68,21 +68,40 @@ def init_db():
     add_column_safely(cursor, "users", "avatar_url", "TEXT")
     add_column_safely(cursor, "users", "has_seen_welcome", "INTEGER DEFAULT 0")
 
-    # Seed Users only if empty
+    # --- Forced Credential Sync ---
+    # Ensure the 3 requested demo accounts always work with demo123
+    print("Syncing requested demo credentials...")
+    demo_users = [
+        ('Admin', 'admin@restoration.com', generate_password_hash('demo123'), 'admin'),
+        ('CS Team', 'cs@restoration.com', generate_password_hash('demo123'), 'cs'),
+        ('Client', 'client1@gmail.com', generate_password_hash('demo123'), 'client')
+    ]
+    
+    for username, email, hashed_pw, role in demo_users:
+        # Check if user exists by email
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (email,))
+        existing = cursor.fetchone()
+        if existing:
+            cursor.execute("""
+                UPDATE users SET password = ?, role = ?, username = ? 
+                WHERE id = ?
+            """, (hashed_pw, role, username, existing[0]))
+        else:
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role)
+                VALUES (?, ?, ?, ?)
+            """, (username, email, hashed_pw, role))
+    
+    # --- Secondary Seeding (only if empty) ---
     cursor.execute("SELECT COUNT(*) FROM users")
-    if cursor.fetchone()[0] == 0:
-        print("Seeding initial users...")
-        users = [
-            ('admin', 'admin@restoration.com', generate_password_hash('demo123'), 'admin'),
-            ('sarah', 'cs@restoration.com', generate_password_hash('demo123'), 'cs'),
+    if cursor.fetchone()[0] <= 3: # Only the 3 demo users exist or it's empty
+        print("Seeding additional test users...")
+        additional_users = [
+            ('sarah', 'sarah@example.com', generate_password_hash('demo123'), 'cs'),
             ('phil', 'phil@client.com', generate_password_hash('demo123'), 'client'),
-            ('jimmy', 'jimmy@client.com', generate_password_hash('demo123'), 'client'),
-            ('jyoti', 'jyoti@client.com', generate_password_hash('demo123'), 'client'),
-            ('client1', 'client1@gmail.com', generate_password_hash('demo123'), 'client'),
-            ('anjan', 'anjan@karmastaff.com', generate_password_hash('demo123'), 'client'),
             ('anjan theeng', 'anjan@client.com', generate_password_hash('demo123'), 'client')
         ]
-        cursor.executemany("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)", users)
+        cursor.executemany("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)", additional_users)
 
     # Create Candidates Table
     cursor.execute('''
