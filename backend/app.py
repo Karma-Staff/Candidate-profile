@@ -850,10 +850,15 @@ def save_assignments():
             cands = conn.execute(f"SELECT name FROM candidates WHERE id IN ({placeholders})", new_ids).fetchall()
             candidate_names = [c['name'] for c in cands]
 
-        # Clear existing
+        # Clear existing assignments for this specific client
         conn.execute("DELETE FROM assignments WHERE client_id = ?", (client_id,))
-        # Add new
+        
+        # Add new assignments while ensuring single-client ownership
         for index, cand_id in enumerate(candidate_ids):
+            # Enforce single client assignment: delete any existing assignment for this candidate globally
+            conn.execute("DELETE FROM assignments WHERE candidate_id = ?", (cand_id,))
+            
+            # Insert the new assignment
             conn.execute("INSERT INTO assignments (client_id, candidate_id, sort_order) VALUES (?, ?, ?)", 
                          (client_id, cand_id, index))
         conn.commit()

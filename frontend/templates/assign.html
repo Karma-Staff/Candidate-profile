@@ -52,18 +52,11 @@
         <div id="availableList"
             style="display: flex; flex-direction: column; gap: 0.5rem; min-height: 400px; padding: 0.5rem; background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.05);">
             {% for c in candidates %}
-            <div class="candidate-item card {{ 'assigned-else' if c.assigned_to_id and c.assigned_to_id != client_id else '' }}"
-                data-id="{{ c.id }}" data-assigned-id="{{ c.assigned_to_id or '' }}"
+            <div class="candidate-item card" data-id="{{ c.id }}" data-assigned-id="{{ c.assigned_to_id or '' }}"
                 style="padding: 1rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; transition: all 0.2s; position: relative;">
 
                 <i data-lucide="grip-vertical" class="drag-handle"
-                    style="width: 16px; flex-shrink: 0; cursor: grab; {{ 'display:none;' if c.assigned_to_id and c.assigned_to_id != client_id else '' }}"></i>
-
-                {% if c.assigned_to_id and c.assigned_to_id != client_id %}
-                <div class="assigned-lock" style="position: absolute; left: 0.5rem; top: 0.5rem;">
-                    <i data-lucide="lock" style="width: 12px; height: 12px; color: #f87171;"></i>
-                </div>
-                {% endif %}
+                    style="width: 16px; flex-shrink: 0; cursor: grab;"></i>
 
                 <div
                     style="width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #1e293b; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
@@ -245,21 +238,7 @@
                     } else {
                         // Not assigned to this client
                         availableList.appendChild(item);
-
-                        // Check if assigned to SOMEONE ELSE
-                        if (itemAssignedToId && itemAssignedToId !== clientId) {
-                            item.classList.add('assigned-else');
-                            if (dragHandle) dragHandle.style.display = 'none';
-
-                            // Add lock icon if not exists
-                            const lock = document.createElement('div');
-                            lock.className = 'assigned-lock';
-                            lock.style.position = 'absolute';
-                            lock.style.left = '0.5rem';
-                            lock.style.top = '0.5rem';
-                            lock.innerHTML = '<i data-lucide="lock" style="width: 12px; height: 12px; color: #f87171;"></i>';
-                            item.appendChild(lock);
-                        }
+                        // We removed the 'assigned-else' locking logic here so candidates can be freely reassigned.
                     }
                 });
 
