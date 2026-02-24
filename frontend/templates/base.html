@@ -36,18 +36,18 @@
         </button>
 
         <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
+                <i data-lucide="layout-dashboard" style="width: 18px;"></i> Dashboard
+            </a>
             <a href="{{ url_for('candidates') }}" class="nav-item {{ 'active' if request.endpoint == 'candidates' }}">
                 <i data-lucide="users" style="width: 18px;"></i> Candidates
             </a>
+
             <a href="{{ url_for('meetings') }}" class="nav-item {{ 'active' if request.endpoint == 'meetings' }}">
                 <i data-lucide="calendar" style="width: 18px;"></i> Meetings
             </a>
 
             {% if user.role == 'admin' or user.role == 'cs' %}
-            <a href="{{ url_for('admin_dashboard') }}"
-                class="nav-item {{ 'active' if request.endpoint == 'admin_dashboard' }}">
-                <i data-lucide="layout-dashboard" style="width: 18px;"></i> Dashboard
-            </a>
             <a href="{{ url_for('assign_candidates') }}"
                 class="nav-item {{ 'active' if request.endpoint == 'assign_candidates' }}">
                 <i data-lucide="user-plus" style="width: 18px;"></i> Assign

@@ -51,10 +51,10 @@
         <div style="display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; align-items: center;">
             {# Shared/Conditional Booking/Schedule Button #}
             {% if user.role == 'client' %}
-            <a href="{{ url_for('meetings') }}" class="btn"
-                style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);">
+            <button onclick="requestMeeting({{ candidate.id }})" class="btn" id="requestBtn"
+                style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); cursor: pointer;">
                 <i data-lucide="calendar" style="width: 18px;"></i> Request Meeting
-            </a>
+            </button>
             {% else %}
             <a href="{{ url_for('meetings') }}" class="btn"
                 style="background: #afdaff; color: #1e293b; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none;">
@@ -267,4 +267,89 @@
         color: #475569;
     }
 </style>
+
+<script>
+    function requestMeeting(candidateId) {
+        const btn = document.getElementById('requestBtn');
+        const originalContent = btn.innerHTML;
+
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin" style="width: 18px;"></i> Sending...';
+        lucide.createIcons();
+
+        fetch('/api/meetings/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ candidate_id: candidateId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message || 'Request sent successfully!', 'success');
+                    btn.innerHTML = '<i data-lucide="check" style="width: 18px;"></i> Request Sent';
+                    btn.style.background = '#059669';
+
+                    // 2-second triple-cannon success celebration
+                    if (typeof confetti === 'function') {
+                        const end = Date.now() + 2000;
+                        const colors = ['#f97316', '#3b82f6', '#10b981', '#ffffff'];
+                        (function frame() {
+                            // Left Cannon
+                            confetti({
+                                particleCount: 2,
+                                angle: 60,
+                                spread: 55,
+                                origin: { x: 0, y: 0.8 },
+                                colors: colors,
+                                zIndex: 9999
+                            });
+                            // Right Cannon
+                            confetti({
+                                particleCount: 2,
+                                angle: 120,
+                                spread: 55,
+                                origin: { x: 1, y: 0.8 },
+                                colors: colors,
+                                zIndex: 9999
+                            });
+                            // Middle Cannon
+                            confetti({
+                                particleCount: 2,
+                                angle: 90,
+                                spread: 45,
+                                origin: { x: 0.5, y: 0.8 },
+                                colors: colors,
+                                zIndex: 9999
+                            });
+
+                            if (Date.now() < end) {
+                                requestAnimationFrame(frame);
+                            }
+                        }());
+                    } else {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+                        s.onload = () => { window.confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, zIndex: 9999 }); };
+                        document.head.appendChild(s);
+                    }
+                } else {
+                    showToast(data.error || 'Failed to send request', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An unexpected error occurred', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            });
+    }
+</script>
 {% endblock %}

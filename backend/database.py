@@ -20,9 +20,17 @@ if _parent_dir and _parent_dir != "/":
         DB_PATH = os.path.basename(DB_PATH)
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=30)
+        conn.row_factory = sqlite3.Row
+        # Enable WAL (Write Ahead Logging) for better concurrency
+        conn.execute('PRAGMA journal_mode=WAL')
+        # Ensure foreign keys are enforced
+        conn.execute('PRAGMA foreign_keys=ON')
+        return conn
+    except sqlite3.Error as e:
+        print(f"Database connection error: {e}")
+        raise
 
 def add_column_safely(cursor, table, column, type_def):
     """Safely adds a column to a table if it doesn't already exist."""
@@ -72,6 +80,8 @@ def init_db():
     add_column_safely(cursor, "users", "email", "TEXT UNIQUE")
     add_column_safely(cursor, "users", "avatar_url", "TEXT")
     add_column_safely(cursor, "users", "has_seen_welcome", "INTEGER DEFAULT 0")
+    add_column_safely(cursor, "users", "department", "TEXT")
+    add_column_safely(cursor, "users", "job_title", "TEXT")
 
     # --- Forced Credential Sync ---
     # Ensure the 3 requested demo accounts always work with demo123

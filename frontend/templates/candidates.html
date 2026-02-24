@@ -42,7 +42,7 @@
         <p>Browse and connect with top restoration talent</p>
     </div>
     <div style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-celebrate" onclick="triggerCelebration()">
+        <button type="button" class="btn btn-celebrate" id="celebrateBtn">
             <i data-lucide="party-popper" style="width: 16px;"></i> Celebrate
         </button>
         {% if user.role != 'client' %}
@@ -158,6 +158,13 @@
                             <i data-lucide="briefcase" style="width: 13px;"></i> {{ c.experience_years }} years
                             experience
                         </div>
+                        {% if c.assigned_to_name %}
+                        <div
+                            style="display: flex; align-items: center; gap: 0.5rem; color: #60a5fa; font-weight: 500; margin-top: 0.25rem;">
+                            <i data-lucide="user-check" style="width: 13px;"></i>
+                            {{ 'My Assigned' if user.role == 'client' else 'Assigned to: ' + c.assigned_to_name }}
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem;">
@@ -179,13 +186,60 @@
     window.userRole = "{{ user.role }}";
 
     function triggerCelebration() {
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#f97316', '#3b82f6', '#10b981', '#ffffff']
-        });
+        console.log("2-second triple-cannon celebration triggered");
+        const end = Date.now() + 2000;
+        const colors = ['#f97316', '#3b82f6', '#10b981', '#ffffff'];
+
+        (function frame() {
+            // Left Cannon
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0, y: 0.8 },
+                colors: colors,
+                zIndex: 9999
+            });
+            // Right Cannon
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1, y: 0.8 },
+                colors: colors,
+                zIndex: 9999
+            });
+            // Middle Cannon
+            confetti({
+                particleCount: 2,
+                angle: 90,
+                spread: 45,
+                origin: { x: 0.5, y: 0.8 },
+                colors: colors,
+                zIndex: 9999
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
     }
+
+    // Attach listener when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('celebrateBtn');
+        if (btn) {
+            console.log("Celebrate button found, attaching listener");
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                triggerCelebration();
+            });
+        } else {
+            console.error("Celebrate button NOT found in DOM");
+        }
+    });
+
+    window.triggerCelebration = triggerCelebration;
 
     let filterTimeout;
 

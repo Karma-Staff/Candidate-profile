@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
             <span class="badge badge-{{ u.role }} badge-role"
                 data-role-cat="{{ 'admin' if u.role == 'admin' else 'client' if u.role == 'client' else 'other' }}"
                 style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 100px; font-weight: 600; text-transform: capitalize; border: 1px solid currentColor;">
@@ -87,23 +87,33 @@
                 {{ 'Customer Service' if u.role == 'cs' else u.role }}
             </span>
 
-            {% if u.username != user.username %}
-            <form action="{{ url_for('delete_user', id=u.id) }}" method="POST" style="margin: 0;"
-                onsubmit="return confirm('Are you sure you want to delete this user?');">
-                <button type="submit" class="btn-ghost" title="Delete User"
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn-ghost" title="Edit User" onclick="openEditModal({{ u.id }})"
+                    style="color: var(--accent); padding: 0.5rem; border-radius: 8px;">
+                    <i data-lucide="edit-2" style="width: 18px;"></i>
+                </button>
+
+                {% if u.id != user.id %}
+                <button class="btn-ghost" title="Delete User" onclick="confirmDelete({{ u.id }}, '{{ u.username }}')"
                     style="color: var(--error); padding: 0.5rem; border-radius: 8px;">
                     <i data-lucide="trash-2" style="width: 18px;"></i>
                 </button>
-            </form>
-            {% else %}
-            <div style="width: 34px;"></div> <!-- Spacer for 'You' row -->
-            {% endif %}
+                {% else %}
+                <div style="width: 34px;"></div>
+                {% endif %}
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
 
-<!-- Add User Modal -->
+<!-- Progress/Toast overlay -->
+<div id="toast"
+    style="position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; background: var(--glass-strong); border: 1px solid var(--border); border-radius: var(--radius); display: none; z-index: 1000; animation: fadeInUp 0.3s ease;">
+    <span id="toast-message"></span>
+</div>
+
+<!-- Add/Edit User Modal -->
 <div id="userModal" class="modal-overlay" style="display: none;">
     <div class="card modal-content" style="position: relative; max-width: 600px;">
         <button onclick="toggleModal(false)" class="btn-ghost"
@@ -111,18 +121,19 @@
             <i data-lucide="x" style="width: 20px;"></i>
         </button>
 
-        <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+        <h2 id="modalTitle" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
             <div
                 style="width: 36px; height: 36px; background: var(--accent-subtle); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                <i data-lucide="user-plus" style="width: 18px; color: var(--accent);"></i>
+                <i data-lucide="user-plus" id="modalIcon" style="width: 18px; color: var(--accent);"></i>
             </div>
-            Create New User
+            <span>Create New User</span>
         </h2>
 
-        <form action="{{ url_for('create_user') }}" method="POST" enctype="multipart/form-data" id="createUserForm">
+        <form id="userForm">
+            <input type="hidden" name="user_id" id="editUserId">
             <div style="display: flex; gap: 2rem; margin-bottom: 2rem; align-items: flex-start;">
-                <!-- Avatar Upload Section -->
-                <div style="flex-shrink: 0; text-align: center;">
+                <!-- Avatar Upload Section (Only for Create) -->
+                <div id="avatarSection" style="flex-shrink: 0; text-align: center;">
                     <div id="avatarPreview"
                         style="width: 100px; height: 100px; border-radius: 50%; background: var(--glass); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 0.75rem; cursor: pointer;"
                         onclick="document.getElementById('avatarInput').click()">
@@ -139,13 +150,13 @@
                 <div style="flex: 1; display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="username" class="search-input" style="padding: 0.75rem 1rem;"
-                            placeholder="John Doe" required>
+                        <input type="text" name="username" id="modalUsername" class="search-input"
+                            style="padding: 0.75rem 1rem;" placeholder="John Doe" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="search-input" style="padding: 0.75rem 1rem;"
-                            placeholder="john@example.com" required>
+                        <input type="email" name="email" id="modalEmail" class="search-input"
+                            style="padding: 0.75rem 1rem;" placeholder="john@example.com" required>
                     </div>
                 </div>
             </div>
@@ -175,7 +186,7 @@
                 </div>
             </div>
 
-            <div
+            <div id="clientOnboardingSection"
                 style="padding: 1.25rem; background: var(--glass); border: 1px dashed var(--border); border-radius: var(--radius); margin-bottom: 1.5rem;">
                 <label
                     style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--success); font-weight: 600; margin-bottom: 1rem;">
@@ -196,8 +207,8 @@
             </div>
 
             <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
-                    <i data-lucide="check" style="width: 16px;"></i> Create User
+                <button type="submit" id="modalSubmitBtn" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                    <i data-lucide="check" style="width: 16px;"></i> <span>Create User</span>
                 </button>
                 <button type="button" class="btn btn-outline" style="padding: 0.75rem 2rem;"
                     onclick="toggleModal(false)">
@@ -206,7 +217,7 @@
             </div>
         </form>
 
-        <div style="font-size: 0.75rem; color: var(--text-lighter);">
+        <div id="defaultPasswordTip" style="font-size: 0.75rem; color: var(--text-lighter);">
             Default password: <code
                 style="padding: 0.125rem 0.375rem; background: var(--glass-strong); border-radius: 4px; color: var(--text);">demo123</code>
         </div>
@@ -214,10 +225,140 @@
 </div>
 
 <script>
-    function toggleModal(show) {
+    let isEditing = false;
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        toastMessage.textContent = message;
+        toast.style.borderColor = isError ? 'var(--error)' : 'var(--success)';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    function toggleModal(show, editData = null) {
         const modal = document.getElementById('userModal');
-        modal.style.display = show ? 'flex' : 'none';
-        if (show) lucide.createIcons();
+        const form = document.getElementById('userForm');
+        const title = document.querySelector('#modalTitle span');
+        const icon = document.getElementById('modalIcon');
+        const submitBtn = document.querySelector('#modalSubmitBtn span');
+        const avatarSection = document.getElementById('avatarSection');
+        const passwordTip = document.getElementById('defaultPasswordTip');
+
+        isEditing = !!editData;
+        form.reset();
+
+        if (show) {
+            if (isEditing) {
+                title.textContent = 'Edit User';
+                submitBtn.textContent = 'Save Changes';
+                icon.setAttribute('data-lucide', 'user-cog');
+                avatarSection.style.display = 'none';
+                passwordTip.style.display = 'none';
+
+                document.getElementById('editUserId').value = editData.id;
+                document.getElementById('modalUsername').value = editData.username;
+                document.getElementById('modalEmail').value = editData.email;
+                document.getElementById('roleInput').value = editData.role;
+
+                // Select role card
+                const roleEl = document.querySelector(`.role-option[data-role="${editData.role}"]`);
+                if (roleEl) selectRole(roleEl);
+            } else {
+                title.textContent = 'Create New User';
+                submitBtn.textContent = 'Create User';
+                icon.setAttribute('data-lucide', 'user-plus');
+                avatarSection.style.display = 'block';
+                passwordTip.style.display = 'block';
+                document.getElementById('editUserId').value = '';
+                document.getElementById('avatarPreview').innerHTML = '<i data-lucide="camera" style="width: 32px; color: var(--text-lighter);"></i>';
+                selectRole(document.querySelector('.role-option[data-role="client"]'));
+            }
+            modal.style.display = 'flex';
+            lucide.createIcons();
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+
+    async function openEditModal(userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}`);
+            const user = await response.json();
+            if (user.id) {
+                toggleModal(true, user);
+            } else {
+                showToast(user.message || 'Error fetching user', true);
+            }
+        } catch (error) {
+            showToast('Connection error', true);
+        }
+    }
+
+    document.getElementById('userForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = document.getElementById('modalSubmitBtn');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Processing...';
+
+        const url = isEditing ? `/api/users/update/${document.getElementById('editUserId').value}` : '/api/users/create';
+
+        try {
+            let response;
+            if (isEditing) {
+                // For editing, we send JSON
+                const jsonData = Object.fromEntries(formData.entries());
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jsonData)
+                });
+            } else {
+                // For creation, we send FormData (for avatar upload)
+                response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            const result = await response.json();
+            if (result.success) {
+                showToast(result.message);
+                toggleModal(false);
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(result.message || 'Action failed', true);
+            }
+        } catch (error) {
+            showToast('Connection error', true);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            lucide.createIcons();
+        }
+    });
+
+    async function confirmDelete(userId, username) {
+        if (!confirm(`Are you sure you want to delete ${username}?`)) return;
+
+        try {
+            const response = await fetch(`/api/users/delete/${userId}`, {
+                method: 'DELETE',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast(result.message);
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(result.message || 'Error deleting user', true);
+            }
+        } catch (error) {
+            showToast('Connection error', true);
+        }
     }
 
     function filterUsers(role, el) {

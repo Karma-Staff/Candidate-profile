@@ -29,9 +29,10 @@
             style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), #818cf8); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
             <i data-lucide="layout-dashboard" style="width: 22px; height: 22px; color: white;"></i>
         </div>
-        <h1 style="margin: 0;">Admin Dashboard</h1>
+        <h1 style="margin: 0;">{% if user.role == 'client' %}My Dashboard{% else %}Admin Dashboard{% endif %}</h1>
     </div>
-    <p>Monitor system activity, users, and audit logs</p>
+    <p>{% if user.role == 'client' %}Track your recent activity and interactions{% else %}Monitor system activity,
+        users, and audit logs{% endif %}</p>
 </div>
 
 <!-- Stats Row -->
@@ -40,7 +41,8 @@
     <div class="card stat-card accent">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <div class="stat-label">Total Audit Logs</div>
+                <div class="stat-label">{% if user.role == 'client' %}My Recent Activity{% else %}Total Audit Logs{%
+                    endif %}</div>
                 <div class="stat-value">{{ total_logs }}</div>
             </div>
             <div
@@ -56,11 +58,12 @@
         </div>
     </div>
 
+    {% if user.role != 'client' %}
     <div class="card stat-card success">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div class="stat-label">Active Users</div>
-                <div class="stat-value" style="color: var(--success);">5</div>
+                <div class="stat-value" style="color: var(--success);">{{ total_users }}</div>
             </div>
             <div
                 style="width: 44px; height: 44px; background: var(--success-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
@@ -71,12 +74,14 @@
             <span style="color: var(--success);">↑ 2</span> new this month
         </div>
     </div>
+    {% endif %}
 
     <div class="card stat-card warning">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <div class="stat-label">Total Candidates</div>
-                <div class="stat-value" style="color: var(--warning);">7</div>
+                <div class="stat-label">{% if user.role == 'client' %}My Candidates{% else %}Total Candidates{% endif %}
+                </div>
+                <div class="stat-value" style="color: var(--warning);">{{ total_candidates }}</div>
             </div>
             <div
                 style="width: 44px; height: 44px; background: var(--warning-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center;">

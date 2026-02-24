@@ -11,6 +11,7 @@ import bleach
 import logging
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_talisman import Talisman
+import resend
 
 load_dotenv()
 
@@ -38,6 +39,9 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=3600 # 1 hour
 )
 
+# Initialize Resend
+resend.api_key = "re_VVMv1PEL_By18DtNi1ERvtfqatm2U3WnC"
+
 # Initialize Security Headers
 # content_security_policy allows Google Fonts and Gemini API interactions
 csp = {
@@ -46,8 +50,15 @@ csp = {
         '\'self\'',
         'https://unpkg.com', # Lucide icons
         'https://cdn.jsdelivr.net',
-        '\'unsafe-inline\'' # Required for some dynamic UI updates, but restricted
+        '\'unsafe-inline\'', # Required for some dynamic UI updates, but restricted
+        'blob:' # Required for canvas-confetti workers
     ],
+    'worker-src': ['\'self\'', 'blob:'], # Required for canvas-confetti
+    'connect-src': [
+        '\'self\'', 
+        'https://unpkg.com', 
+        'https://cdn.jsdelivr.net'
+    ], # Allowed for sourcemaps and API calls
     'style-src': [
         '\'self\'',
         'https://fonts.googleapis.com',
@@ -60,7 +71,14 @@ csp = {
     'img-src': ['\'self\'', 'data:', '/static/uploads/']
 }
 
-force_https = os.getenv('FLASK_DEBUG', 'True').lower() == 'false' and os.getenv('TESTING') != 'True'
+# Security Configuration for Talisman
+debug_mode_env = os.getenv('FLASK_DEBUG', 'False').lower()
+force_https = debug_mode_env == 'false' and os.getenv('TESTING') != 'True'
+
+# Disable HTTPS redirection for local development sessions
+if debug_mode_env == 'true':
+    force_https = False
+
 talisman = Talisman(app, content_security_policy=csp, force_https=force_https)
 
 @app.route('/static/uploads/<path:filename>')
@@ -172,6 +190,20 @@ def log_action(action, resource_id=None):
     conn.commit()
     conn.close()
 
+def create_notification(user_id, title, message, notif_type='info'):
+    """Creates a targeted notification for a specific user."""
+    try:
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, title, message, notif_type))
+        conn.commit()
+        conn.close()
+        logger.info(f"Notification created for User {user_id}: {title}")
+    except Exception as e:
+        logger.error(f"Failed to create notification for User {user_id}: {e}")
+
 def extract_text_from_pdf(pdf_path):
     """Extracts text from a PDF file using PyPDF2."""
     if not pdf_path or not os.path.exists(pdf_path):
@@ -235,24 +267,50 @@ def index():
         return redirect(url_for('login'))
     return redirect(url_for('candidates')) # Default to candidates as per screenshot header
 
-@app.route('/admin-dashboard')
-@require_role('admin', 'cs')
-def admin_dashboard():
+@app.route('/dashboard')
+@require_role('admin', 'cs', 'client')
+def dashboard():
     user = get_current_user()
     
     conn = get_db_connection()
-    logs = conn.execute('''
-        SELECT al.*, u.username, c.name as candidate_name 
-        FROM audit_logs al
-        LEFT JOIN users u ON al.user_id = u.id
-        LEFT JOIN candidates c ON al.resource_id = c.id
-        ORDER BY al.timestamp DESC
-        LIMIT 10
-    ''').fetchall()
-    total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs").fetchone()[0]
+    
+    # Filter logs based on role
+    if user['role'] == 'client':
+        logs_query = '''
+            SELECT al.*, u.username, c.name as candidate_name 
+            FROM audit_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN candidates c ON al.resource_id = c.id
+            WHERE al.user_id = ?
+            ORDER BY al.timestamp DESC
+            LIMIT 10
+        '''
+        logs = conn.execute(logs_query, (user['id'],)).fetchall()
+        total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs WHERE user_id = ?", (user['id'],)).fetchone()[0]
+        total_candidates = conn.execute("SELECT COUNT(*) FROM assignments WHERE client_id = ?", (user['id'],)).fetchone()[0]
+        total_users = 0 # Not used for clients
+    else:
+        logs_query = '''
+            SELECT al.*, u.username, c.name as candidate_name 
+            FROM audit_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN candidates c ON al.resource_id = c.id
+            ORDER BY al.timestamp DESC
+            LIMIT 10
+        '''
+        logs = conn.execute(logs_query).fetchall()
+        total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs").fetchone()[0]
+        total_candidates = conn.execute("SELECT COUNT(*) FROM candidates").fetchone()[0]
+        total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        
     conn.close()
     
-    return render_template('dashboard.html', user=user, logs=logs, total_logs=total_logs)
+    return render_template('dashboard.html', 
+                         user=user, 
+                         logs=logs, 
+                         total_logs=total_logs, 
+                         total_candidates=total_candidates,
+                         total_users=total_users)
 
 @app.route('/meetings')
 @require_role('admin', 'cs', 'client')
@@ -316,7 +374,7 @@ def login():
             logger.info(f"[AUTH] Login success: user id={user['id']} role={user['role']}")
             log_action('LOGIN')
             if user['role'] in ['admin', 'cs']:
-                return redirect(url_for('admin_dashboard'))
+                return redirect(url_for('dashboard'))
             return redirect(url_for('candidates'))
         else:
             logger.warning(f"[AUTH] Login failed: bad password for user id={user['id']} (hash format: {pw_hash[:10] if pw_hash else 'empty'})")
@@ -355,25 +413,37 @@ def candidates():
     
     params = []
     if user['role'] == 'client':
-        query = "SELECT c.* FROM candidates c JOIN assignments a ON c.id = a.candidate_id WHERE a.client_id = ?"
+        query = """
+            SELECT c.*, u.username as assigned_to_name, u.id as assigned_to_id 
+            FROM candidates c 
+            JOIN assignments a ON c.id = a.candidate_id 
+            JOIN users u ON a.client_id = u.id 
+            WHERE a.client_id = ?
+        """
         params.append(user['id'])
     else:
-        query = "SELECT * FROM candidates WHERE 1=1"
+        query = """
+            SELECT c.*, u.username as assigned_to_name, u.id as assigned_to_id 
+            FROM candidates c 
+            LEFT JOIN assignments a ON c.id = a.candidate_id 
+            LEFT JOIN users u ON a.client_id = u.id 
+            WHERE 1=1
+        """
     
     if search:
-        query += " AND (name LIKE ? OR skills LIKE ? OR role_type LIKE ? OR professional_title LIKE ?)"
+        query += " AND (c.name LIKE ? OR c.skills LIKE ? OR c.role_type LIKE ? OR c.professional_title LIKE ?)"
         params.extend([f'%{search}%', f'%{search}%', f'%{search}%', f'%{search}%'])
     
     if experience and experience != 'All':
         val = int(experience.replace('+', '').replace(' Years', ''))
-        query += " AND experience_years >= ?"
+        query += " AND c.experience_years >= ?"
         params.append(val)
 
     if availability and availability != 'All':
-        query += " AND availability LIKE ?"
+        query += " AND c.availability LIKE ?"
         params.append(f'%{availability}%')
         
-    query += " ORDER BY sort_order ASC, name ASC"
+    query += " ORDER BY c.sort_order ASC, c.name ASC"
         
     conn = get_db_connection()
     candidate_list = conn.execute(query, params).fetchall()
@@ -473,35 +543,29 @@ def user_management():
 @app.route('/api/users/create', methods=['POST'])
 @require_role('admin')
 def create_user():
-    user = get_current_user()
-    
-    username = bleach.clean(request.form.get('username', ''))
-    email = bleach.clean(request.form.get('email', ''))
+    username = bleach.clean(request.form.get('username', '')).strip()
+    email = bleach.clean(request.form.get('email', '')).strip()
     role = bleach.clean(request.form.get('role', 'client'))
     
-    # In production, this should be generated or provided securely
-    password = generate_password_hash('demo123') 
-    
-    if not username:
-        return {"error": "Username required"}, 400
-    if not email:
-        return {"error": "Email address required"}, 400
+    if not username or not email:
+        return jsonify({"success": False, "message": "Username and Email are required"}), 400
         
     # Basic email validation
     import re
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_regex, email):
-        return {"error": "Invalid email format"}, 400
+        return jsonify({"success": False, "message": "Invalid email format"}), 400
 
+    password = generate_password_hash('demo123') 
+    
     avatar_url = None
     if 'avatar' in request.files:
         file = request.files['avatar']
         if file and file.filename:
             if not allowed_file(file.filename, 'avatars'):
-                return {"error": "Invalid avatar file type. Allowed: png, jpg, jpeg, gif"}, 400
+                return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
             
             from werkzeug.utils import secure_filename
-            import os
             filename = secure_filename(f"{username}_{file.filename}")
             upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
             file.save(upload_path)
@@ -509,7 +573,6 @@ def create_user():
     
     conn = get_db_connection()
     try:
-        # Check if username or email already exists
         existing = conn.execute(
             "SELECT username, email FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)", 
             (username, email)
@@ -517,27 +580,74 @@ def create_user():
         
         if existing:
             if existing['username'].lower() == username.lower():
-                return {"error": "Username already exists"}, 400
-            if existing['email'] and existing['email'].lower() == email.lower():
-                return {"error": "Email already in use"}, 400
+                return jsonify({"success": False, "message": "Username already exists"}), 400
+            return jsonify({"success": False, "message": "Email already in use"}), 400
 
         conn.execute("INSERT INTO users (username, password, role, avatar_url, email) VALUES (?, ?, ?, ?, ?)",
                     (username, password, role, avatar_url, email))
         conn.commit()
         log_action('CREATE_USER', username)
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            return jsonify({"success": True, "message": "User created successfully"})
         return redirect(url_for('user_management'))
     except Exception as e:
-        logger.error(f"User creation database error: {e}")
-        return {"error": "An internal error occurred during user creation"}, 500
+        logger.error(f"User creation error: {e}")
+        return jsonify({"success": False, "message": "Internal server error"}), 500
     finally:
         conn.close()
 
-@app.route('/api/users/delete/<int:id>', methods=['POST'])
+@app.route('/api/users/<int:id>')
+@require_role('admin')
+def get_user(id):
+    conn = get_db_connection()
+    user = conn.execute("SELECT id, username, email, role, avatar_url FROM users WHERE id = ?", (id,)).fetchone()
+    conn.close()
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    return jsonify(dict(user))
+
+@app.route('/api/users/update/<int:id>', methods=['POST'])
+@require_role('admin')
+def update_user_api(id):
+    data = request.json or request.form
+    username = bleach.clean(data.get('username', '')).strip()
+    email = bleach.clean(data.get('email', '')).strip()
+    role = bleach.clean(data.get('role', 'client'))
+    
+    if not username or not email:
+        return jsonify({"success": False, "message": "Username and Email are required"}), 400
+        
+    conn = get_db_connection()
+    try:
+        # Check duplicates
+        existing = conn.execute(
+            "SELECT id FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?", 
+            (username, email, id)
+        ).fetchone()
+        
+        if existing:
+            return jsonify({"success": False, "message": "Username or Email already in use"}), 400
+
+        conn.execute(
+            "UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?",
+            (username, email, role, id)
+        )
+        conn.commit()
+        log_action('UPDATE_USER', id)
+        return jsonify({"success": True, "message": "User updated successfully"})
+    except Exception as e:
+        logger.error(f"User update error: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/users/delete/<int:id>', methods=['POST', 'DELETE'])
 @require_role('admin')
 def delete_user(id):
-    user = get_current_user()
-    if user['id'] == id:
-        return {"error": "You cannot delete your own account"}, 400
+    current_user = get_current_user()
+    if current_user['id'] == id:
+        return jsonify({"success": False, "message": "You cannot delete your own account"}), 400
         
     try:
         conn = get_db_connection()
@@ -545,9 +655,13 @@ def delete_user(id):
         conn.commit()
         conn.close()
         log_action('DELETE_USER', id)
+        
+        if request.method == 'DELETE' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"success": True, "message": "User deleted successfully"})
         return redirect(url_for('user_management'))
     except Exception as e:
-        return {"error": str(e)}, 500
+        logger.error(f"User deletion error: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/api/notifications')
 @require_role('admin', 'cs', 'client')
@@ -566,12 +680,42 @@ def get_notifications():
     """, (user['id'],)).fetchall()
     conn.close()
     
-    # Simple "time ago" logic for demo purposes
-    # In a real app we'd use a library or more robust SQL
+    from datetime import datetime, timezone
+    
+    def format_time_ago(dt):
+        now = datetime.now(timezone.utc)
+        # Handle case where created_at might not have TZ info if it's from current_timestamp
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+            
+        diff = now - dt
+        
+        seconds = diff.total_seconds()
+        if seconds < 0: seconds = 0 # Handle slight clock drifts
+        
+        if seconds < 60:
+            return "Just now"
+        elif seconds < 3600:
+            minutes = int(seconds / 60)
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        elif seconds < 86400:
+            hours = int(seconds / 3600)
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif seconds < 604800:
+            days = int(seconds / 86400)
+            return f"{days} day{'s' if days > 1 else ''} ago"
+        else:
+            return dt.strftime('%b %d, %Y')
+
     result = []
     for n in notifications:
         d = dict(n)
-        d['time_ago'] = '6 hours ago' # Hardcoded as per image mock for now
+        # Parse SQL timestamp (e.g. 2026-02-24 16:19:17)
+        try:
+            dt = datetime.strptime(n['created_at'], '%Y-%m-%d %H:%M:%S')
+            d['time_ago'] = format_time_ago(dt)
+        except:
+            d['time_ago'] = 'Recently'
         result.append(d)
         
     return {"notifications": result}
@@ -616,7 +760,19 @@ def assign_candidates():
     
     conn = get_db_connection()
     clients = conn.execute("SELECT * FROM users WHERE role = 'client' ORDER BY username ASC").fetchall()
-    candidates = conn.execute("SELECT * FROM candidates WHERE availability != 'Hired' ORDER BY name ASC").fetchall()
+    
+    # Query to get candidates along with their current assigned client (if any)
+    candidates_query = '''
+        SELECT c.*, 
+               u.username as assigned_to_name,
+               u.id as assigned_to_id
+        FROM candidates c
+        LEFT JOIN assignments a ON c.id = a.candidate_id
+        LEFT JOIN users u ON a.client_id = u.id
+        WHERE c.availability != 'Hired'
+        ORDER BY c.name ASC
+    '''
+    candidates = conn.execute(candidates_query).fetchall()
     conn.close()
     
     return render_template('assign.html', user=user, clients=clients, candidates=candidates)
@@ -677,6 +833,23 @@ def save_assignments():
         
     try:
         conn = get_db_connection()
+        
+        # Ensure candidate_ids are integers for reliable comparison
+        candidate_ids = [int(cid) for cid in candidate_ids if cid]
+        
+        # 1. Get existing candidate IDs to find what's "new"
+        existing_ids_rows = conn.execute("SELECT candidate_id FROM assignments WHERE client_id = ?", (client_id,)).fetchall()
+        existing_ids = {int(row['candidate_id']) for row in existing_ids_rows}
+        
+        # 2. Identify newly assigned IDs (only those not already in the list)
+        new_ids = [cid for cid in candidate_ids if cid not in existing_ids]
+        
+        candidate_names = []
+        if new_ids:
+            placeholders = ', '.join(['?'] * len(new_ids))
+            cands = conn.execute(f"SELECT name FROM candidates WHERE id IN ({placeholders})", new_ids).fetchall()
+            candidate_names = [c['name'] for c in cands]
+
         # Clear existing
         conn.execute("DELETE FROM assignments WHERE client_id = ?", (client_id,))
         # Add new
@@ -685,9 +858,82 @@ def save_assignments():
                          (client_id, cand_id, index))
         conn.commit()
         conn.close()
+        
+        # Create a targeted notification for EACH truly new candidate individually
+        for name in candidate_names:
+            msg = f"Admin has assigned a new candidate to your portal: {name}"
+            create_notification(client_id, "New Candidate Assigned", msg, "info")
+            
         log_action('UPDATE_ASSIGNMENTS', client_id)
         return jsonify({'status': 'success'})
     except Exception as e:
+        logger.error(f"Save assignments error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/meetings/request', methods=['POST'])
+@require_role('client')
+def request_meeting_api():
+    user = get_current_user()
+    data = request.json
+    candidate_id = data.get('candidate_id')
+    
+    if not candidate_id:
+        return jsonify({'error': 'Candidate ID is required'}), 400
+        
+    try:
+        user = dict(user) # Convert Row to dict for safer access
+        conn = get_db_connection()
+        candidate = conn.execute("SELECT name FROM candidates WHERE id = ?", (candidate_id,)).fetchone()
+        conn.close()
+        
+        if not candidate:
+            return jsonify({'error': 'Candidate not found'}), 404
+            
+        candidate_name = candidate['name']
+        client_name = user['username']
+        client_email = user.get('email', 'N/A')
+        
+        receiver_email = os.getenv('NOTIFICATION_RECEIVER_EMAIL', 'anjan.lamatamang@gmail.com')
+        logger.info(f"Attempting to send email via Resend to {receiver_email}...")
+        
+        # Compose and send the email via Resend
+        try:
+            params = {
+                "from": "onboarding@resend.dev", # Standard for testing accounts
+                "to": ["anjan.lamatamang@gmail.com"],
+                "subject": f"Meeting Request: {client_name} for {candidate_name}",
+                "html": f"""
+                    <div style='font-family: sans-serif; padding: 20px; color: #333;'>
+                        <h2 style='color: #22c55e;'>New Meeting Request</h2>
+                        <p><strong>Client:</strong> {client_name} ({client_email})</p>
+                        <p><strong>Candidate:</strong> {candidate_name}</p>
+                        <p>The client has requested to book an appointment with this candidate via the Karma Staff Portal.</p>
+                        <hr style='border: 1px solid #eee;' />
+                        <p style='font-size: 10px; color: #999;'>Karma Staff Talent Intelligence</p>
+                    </div>
+                """,
+            }
+            logger.info(f"Sending Email: {params}")
+            resend.Emails.send(params)
+            logger.info("Resend transmission successful")
+        except Exception as email_err:
+            logger.error(f"Resend failure: {str(email_err)}")
+            # For smooth UX, we return success if it was logged locally, 
+            # but provide a fallback message if email failed
+            return jsonify({
+                'status': 'success', 
+                'message': 'Meeting request logged. (Email delivery skipped due to provider restriction)'
+            }) if "unauthorized" in str(email_err).lower() else jsonify({'error': str(email_err)}), 500
+            
+        # Also create a local notification for record keeping
+        log_action('REQUEST_MEETING', candidate_id)
+        # Maybe notify the admin user as well? (assuming user 1 is admin)
+        create_notification(1, "New Meeting Request", f"Client {client_name} requested a meeting with {candidate_name}")
+        
+        return jsonify({'status': 'success', 'message': 'Meeting request sent successfully!'})
+        
+    except Exception as e:
+        logger.error(f"Meeting request error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/candidate/<int:id>')
@@ -728,6 +974,80 @@ def ai_agent():
     if not user:
         return redirect(url_for('login'))
     return render_template('ai_agent.html', user=user)
+
+@app.route('/api/profile/update', methods=['POST'])
+@require_role('admin', 'cs', 'client')
+def update_profile():
+    user = get_current_user()
+    data = request.json
+    
+    full_name = bleach.clean(data.get('full_name', '')).strip()
+    email = bleach.clean(data.get('email', '')).strip()
+    department = bleach.clean(data.get('department', '')).strip()
+    job_title = bleach.clean(data.get('job_title', '')).strip()
+    
+    if not full_name or not email:
+        return jsonify({'success': False, 'message': 'Full Name and Email are required'}), 400
+        
+    # Diagnostic log
+    logger.info(f"Attempting profile update for User ID {user['id']}: name='{full_name}', email='{email}'")
+    
+    conn = None
+    try:
+        conn = get_db_connection()
+        
+        # 1. Check for Duplicate Username
+        # Use a case-insensitive check but be careful with SQLite's default behavior
+        existing_user = conn.execute(
+            "SELECT id, username FROM users WHERE LOWER(username) = LOWER(?) AND id != ?", 
+            (full_name, user['id'])
+        ).fetchone()
+        
+        if existing_user:
+            logger.warning(f"Update failed: Name '{full_name}' already taken by User ID {existing_user['id']}")
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'message': f'The name "{full_name}" is already being used by another account. Please try a different name.'
+            }), 400
+
+        # 2. Check for Duplicate Email
+        existing_email = conn.execute(
+            "SELECT id, email FROM users WHERE LOWER(email) = LOWER(?) AND id != ?", 
+            (email, user['id'])
+        ).fetchone()
+        
+        if existing_email:
+            logger.warning(f"Update failed: Email '{email}' already taken by User ID {existing_email['id']}")
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'message': 'This email address is already registered to another account.'
+            }), 400
+            
+        # 3. Perform Update
+        conn.execute("""
+            UPDATE users 
+            SET username = ?, email = ?, department = ?, job_title = ?
+            WHERE id = ?
+        """, (full_name, email, department, job_title, user['id']))
+        conn.commit()
+        logger.info(f"Profile updated successfully for User ID {user['id']}")
+        
+        log_action('UPDATE_PROFILE', user['id'])
+        return jsonify({'success': True, 'message': 'Profile updated successfully'})
+        
+    except sqlite3.OperationalError as e:
+        if "database is locked" in str(e):
+            logger.error(f"Database lock detected during profile update: {e}")
+            return jsonify({'success': False, 'message': 'System is busy (database locked). Please wait a moment and try again.'}), 503
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
+    except Exception as e:
+        logger.error(f"Unexpected profile update error (User {user['id']}): {e}")
+        return jsonify({'success': False, 'message': f'Update failed: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/profile')
 @require_role('admin', 'cs', 'client')
