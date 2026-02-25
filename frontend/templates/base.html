@@ -36,11 +36,11 @@
         </button>
 
         <nav class="nav-links" id="navLinks">
-            <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
-                <i data-lucide="layout-dashboard" style="width: 18px;"></i> Dashboard
-            </a>
             <a href="{{ url_for('candidates') }}" class="nav-item {{ 'active' if request.endpoint == 'candidates' }}">
                 <i data-lucide="users" style="width: 18px;"></i> Candidates
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
+                <i data-lucide="layout-dashboard" style="width: 18px;"></i> Dashboard
             </a>
 
             <a href="{{ url_for('meetings') }}" class="nav-item {{ 'active' if request.endpoint == 'meetings' }}">
