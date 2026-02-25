@@ -17,6 +17,10 @@ services:
         value: "5001"
       - key: PYTHON_VERSION
         value: "3.13.0"
+      - key: NOTIFICATION_RECEIVER_EMAIL
+        value: "anjan@karmastaff.com,pema@karmastaff.com,sales@karmastaff.com,service@karmastaff.com,noida@karmastaff.com"
+      - key: RESEND_FROM_EMAIL
+        value: "onboarding@karmastaff.com"
     disk:
       name: sqlite-data
       mountPath: /data
