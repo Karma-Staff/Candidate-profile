@@ -93,14 +93,14 @@ def init_db():
     ]
     
     for username, email, hashed_pw, role in demo_users:
-        # Check if user exists by email
-        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (email,))
+        # Check if user exists by username OR email to prevent UNIQUE constraint errors
+        cursor.execute("SELECT id FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)", (username, email))
         existing = cursor.fetchone()
         if existing:
             cursor.execute("""
-                UPDATE users SET password = ?, role = ?, username = ? 
+                UPDATE users SET password = ?, role = ?, email = ?, username = ? 
                 WHERE id = ?
-            """, (hashed_pw, role, username, existing[0]))
+            """, (hashed_pw, role, email, username, existing[0]))
         else:
             cursor.execute("""
                 INSERT INTO users (username, email, password, role)
