@@ -415,20 +415,22 @@ def candidates():
     params = []
     if user['role'] == 'client':
         query = """
-            SELECT c.*, u.username as assigned_to_name, u.id as assigned_to_id 
+            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id 
             FROM candidates c 
             JOIN assignments a ON c.id = a.candidate_id 
             JOIN users u ON a.client_id = u.id 
             WHERE a.client_id = ?
+            GROUP BY c.id
         """
         params.append(user['id'])
     else:
         query = """
-            SELECT c.*, u.username as assigned_to_name, u.id as assigned_to_id 
+            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id 
             FROM candidates c 
             LEFT JOIN assignments a ON c.id = a.candidate_id 
             LEFT JOIN users u ON a.client_id = u.id 
             WHERE 1=1
+            GROUP BY c.id
         """
     
     if search:
@@ -765,12 +767,13 @@ def assign_candidates():
     # Query to get candidates along with their current assigned client (if any)
     candidates_query = '''
         SELECT c.*, 
-               u.username as assigned_to_name,
-               u.id as assigned_to_id
+               GROUP_CONCAT(u.username, ', ') as assigned_to_name,
+               GROUP_CONCAT(u.id, ',') as assigned_to_id
         FROM candidates c
         LEFT JOIN assignments a ON c.id = a.candidate_id
         LEFT JOIN users u ON a.client_id = u.id
         WHERE c.availability != 'Hired'
+        GROUP BY c.id
         ORDER BY c.name ASC
     '''
     candidates = conn.execute(candidates_query).fetchall()
@@ -854,11 +857,8 @@ def save_assignments():
         # Clear existing assignments for this specific client
         conn.execute("DELETE FROM assignments WHERE client_id = ?", (client_id,))
         
-        # Add new assignments while ensuring single-client ownership
+        # Add new assignments
         for index, cand_id in enumerate(candidate_ids):
-            # Enforce single client assignment: delete any existing assignment for this candidate globally
-            conn.execute("DELETE FROM assignments WHERE candidate_id = ?", (cand_id,))
-            
             # Insert the new assignment
             conn.execute("INSERT INTO assignments (client_id, candidate_id, sort_order) VALUES (?, ?, ?)", 
                          (client_id, cand_id, index))
