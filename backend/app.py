@@ -899,7 +899,7 @@ def request_meeting_api():
         client_name = user['username']
         client_email = user.get('email', 'N/A')
         
-        raw_receivers = os.getenv('NOTIFICATION_RECEIVER_EMAIL', 'anjan@karmastaff.com')
+        raw_receivers = os.getenv('NOTIFICATION_RECEIVER_EMAIL', 'anjan@karmastaff.com,pema@karmastaff.com,sales@karmastaff.com,service@karmastaff.com,noida@karmastaff.com')
         receiver_emails = [email.strip() for email in raw_receivers.split(',') if email.strip()]
         logger.info(f"Attempting to send email via Resend to {receiver_emails}...")
         
