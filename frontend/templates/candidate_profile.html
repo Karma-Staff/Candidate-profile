@@ -289,7 +289,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    showToast(data.message || 'Request sent successfully!', 'success');
+                    showToast('Requested Meeting has been Send to the Team', 'success');
                     btn.innerHTML = '<i data-lucide="check" style="width: 18px;"></i> Request Sent';
                     btn.style.background = '#059669';
 

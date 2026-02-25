@@ -12,6 +12,7 @@ import logging
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_talisman import Talisman
 import resend
+import time
 
 load_dotenv()
 
@@ -40,7 +41,7 @@ app.config.update(
 )
 
 # Initialize Resend
-resend.api_key = "re_VVMv1PEL_By18DtNi1ERvtfqatm2U3WnC"
+resend.api_key = os.getenv('RESEND_API_KEY')
 
 # Initialize Security Headers
 # content_security_policy allows Google Fonts and Gemini API interactions
@@ -898,44 +899,47 @@ def request_meeting_api():
         client_name = user['username']
         client_email = user.get('email', 'N/A')
         
-        receiver_email = os.getenv('NOTIFICATION_RECEIVER_EMAIL', 'anjan.lamatamang@gmail.com')
-        logger.info(f"Attempting to send email via Resend to {receiver_email}...")
+        raw_receivers = os.getenv('NOTIFICATION_RECEIVER_EMAIL', 'anjan@karmastaff.com')
+        receiver_emails = [email.strip() for email in raw_receivers.split(',') if email.strip()]
+        logger.info(f"Attempting to send email via Resend to {receiver_emails}...")
         
-        # Compose and send the email via Resend
-        try:
-            params = {
-                "from": "onboarding@resend.dev", # Standard for testing accounts
-                "to": ["anjan.lamatamang@gmail.com"],
-                "subject": f"Meeting Request: {client_name} for {candidate_name}",
-                "html": f"""
-                    <div style='font-family: sans-serif; padding: 20px; color: #333;'>
-                        <h2 style='color: #22c55e;'>New Meeting Request</h2>
-                        <p><strong>Client:</strong> {client_name} ({client_email})</p>
-                        <p><strong>Candidate:</strong> {candidate_name}</p>
-                        <p>The client has requested to book an appointment with this candidate via the Karma Staff Portal.</p>
-                        <hr style='border: 1px solid #eee;' />
-                        <p style='font-size: 10px; color: #999;'>Karma Staff Talent Intelligence</p>
-                    </div>
-                """,
-            }
-            logger.info(f"Sending Email: {params}")
-            resend.Emails.send(params)
-            logger.info("Resend transmission successful")
-        except Exception as email_err:
-            logger.error(f"Resend failure: {str(email_err)}")
-            # For smooth UX, we return success if it was logged locally, 
-            # but provide a fallback message if email failed
-            return jsonify({
-                'status': 'success', 
-                'message': 'Meeting request logged. (Email delivery skipped due to provider restriction)'
-            }) if "unauthorized" in str(email_err).lower() else jsonify({'error': str(email_err)}), 500
-            
-        # Also create a local notification for record keeping
+        # 1. Record the meeting request in the database and portal notifications FIRST
+        # This ensures the "Team" always receives the request even if email fails
         log_action('REQUEST_MEETING', candidate_id)
-        # Maybe notify the admin user as well? (assuming user 1 is admin)
         create_notification(1, "New Meeting Request", f"Client {client_name} requested a meeting with {candidate_name}")
         
-        return jsonify({'status': 'success', 'message': 'Meeting request sent successfully!'})
+        # 2. Attempt to send the email notification as a secondary action
+        # We re-verify the API key here to ensure it's picked up from the latest .env
+        resend.api_key = os.getenv('RESEND_API_KEY')
+        from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
+        
+        for email_to in receiver_emails:
+            try:
+                params = {
+                    "from": from_email,
+                    "to": [email_to],
+                    "subject": "Urgent !!! Candidate available",
+                    "html": f"""
+                        <div style='font-family: sans-serif; padding: 20px; color: #333;'>
+                            <h2 style='color: #22c55e;'><b style='color: red;'>Urgent</b> !!! Candidate available</h2>
+                            <hr style='border: 1px solid #eee;' />
+                            <p><strong>New Meeting Request</strong></p>
+                            <p><strong>Client:</strong> {client_name} ({client_email})</p>
+                            <p><strong>Candidate:</strong> {candidate_name}</p>
+                            <p>The client has requested to book an appointment with this candidate via the Karma Staff Portal.</p>
+                            <hr style='border: 1px solid #eee;' />
+                            <p style='font-size: 10px; color: #999;'>Karma Staff Talent Intelligence</p>
+                        </div>
+                    """,
+                }
+                logger.info(f"Attempting email delivery to {email_to} via {from_email}")
+                response = resend.Emails.send(params)
+                logger.info(f"Resend response for {email_to}: {response}")
+                time.sleep(1) # Add delay to avoid hitting rate limits
+            except Exception as email_err:
+                logger.error(f"Email delivery failed for {email_to}: {email_err}")
+        
+        return jsonify({'status': 'success', 'message': 'Requested Meeting has been Sent to the Team'})
         
     except Exception as e:
         logger.error(f"Meeting request error: {e}")
@@ -984,7 +988,12 @@ def ai_agent():
 @require_role('admin', 'cs', 'client')
 def update_profile():
     user = get_current_user()
-    data = request.json
+    
+    # Handle both JSON and Form data
+    if request.is_json:
+        data = request.json
+    else:
+        data = request.form
     
     full_name = bleach.clean(data.get('full_name', '')).strip()
     email = bleach.clean(data.get('email', '')).strip()
@@ -1002,7 +1011,6 @@ def update_profile():
         conn = get_db_connection()
         
         # 1. Check for Duplicate Username
-        # Use a case-insensitive check but be careful with SQLite's default behavior
         existing_user = conn.execute(
             "SELECT id, username FROM users WHERE LOWER(username) = LOWER(?) AND id != ?", 
             (full_name, user['id'])
@@ -1030,12 +1038,26 @@ def update_profile():
                 'message': 'This email address is already registered to another account.'
             }), 400
             
-        # 3. Perform Update
+        # 3. Handle Avatar Upload
+        avatar_url = user['avatar_url']
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file and file.filename:
+                if not allowed_file(file.filename, 'avatars'):
+                    return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
+                
+                from werkzeug.utils import secure_filename
+                filename = secure_filename(f"user_{user['id']}_{file.filename}")
+                upload_path = os.path.join(UPLOAD_BASE, 'avatars', filename)
+                file.save(upload_path)
+                avatar_url = f"/static/uploads/avatars/{filename}"
+
+        # 4. Perform Update
         conn.execute("""
             UPDATE users 
-            SET username = ?, email = ?, department = ?, job_title = ?
+            SET username = ?, email = ?, department = ?, job_title = ?, avatar_url = ?
             WHERE id = ?
-        """, (full_name, email, department, job_title, user['id']))
+        """, (full_name, email, department, job_title, avatar_url, user['id']))
         conn.commit()
         logger.info(f"Profile updated successfully for User ID {user['id']}")
         

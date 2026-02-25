@@ -107,11 +107,7 @@
     {% endfor %}
 </div>
 
-<!-- Progress/Toast overlay -->
-<div id="toast"
-    style="position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; background: var(--glass-strong); border: 1px solid var(--border); border-radius: var(--radius); display: none; z-index: 1000; animation: fadeInUp 0.3s ease;">
-    <span id="toast-message"></span>
-</div>
+
 
 <!-- Add/Edit User Modal -->
 <div id="userModal" class="modal-overlay" style="display: none;">
@@ -227,14 +223,7 @@
 <script>
     let isEditing = false;
 
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        toastMessage.textContent = message;
-        toast.style.borderColor = isError ? 'var(--error)' : 'var(--success)';
-        toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
-    }
+
 
     function toggleModal(show, editData = null) {
         const modal = document.getElementById('userModal');
@@ -288,10 +277,10 @@
             if (user.id) {
                 toggleModal(true, user);
             } else {
-                showToast(user.message || 'Error fetching user', true);
+                showToast(user.message || 'Error fetching user', 'error');
             }
         } catch (error) {
-            showToast('Connection error', true);
+            showToast('Connection error', 'error');
         }
     }
 
@@ -326,14 +315,14 @@
 
             const result = await response.json();
             if (result.success) {
-                showToast(result.message);
+                showToast(result.message, 'success');
                 toggleModal(false);
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(result.message || 'Action failed', true);
+                showToast(result.message || 'Action failed', 'error');
             }
         } catch (error) {
-            showToast('Connection error', true);
+            showToast('Connection error', 'error');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
@@ -351,13 +340,13 @@
             });
             const result = await response.json();
             if (result.success) {
-                showToast(result.message);
+                showToast(result.message, 'success');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                showToast(result.message || 'Error deleting user', true);
+                showToast(result.message || 'Error deleting user', 'error');
             }
         } catch (error) {
-            showToast('Connection error', true);
+            showToast('Connection error', 'error');
         }
     }
 

@@ -218,6 +218,30 @@
     <script>
         lucide.createIcons();
 
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+            toast.innerHTML = `
+                <i data-lucide="${icon}" style="width: 18px;"></i>
+                <span style="font-size: 0.875rem; font-weight: 500;">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.4s ease';
+                setTimeout(() => toast.remove(), 450);
+            }, 3000);
+        }
+
         // Welcome Overlay Logic
         document.addEventListener('DOMContentLoaded', () => {
             if (document.body.dataset.showWelcome !== 'true') {

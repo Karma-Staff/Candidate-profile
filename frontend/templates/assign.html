@@ -384,25 +384,7 @@
             });
         });
 
-        function showToast(message, type) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
 
-            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
-            toast.innerHTML = `
-                <i data-lucide="${icon}" style="width: 18px;"></i>
-                <span style="font-size: 0.875rem; font-weight: 500;">${message}</span>
-            `;
-
-            container.appendChild(toast);
-            lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
-        }
     });
 </script>
 
