@@ -89,6 +89,36 @@ def serve_uploads(filename):
     return send_from_directory(UPLOAD_BASE, filename)
 
 
+@app.template_filter('timesince')
+def timesince_filter(dt):
+    """
+    Returns a human readable relative time string.
+    """
+    if isinstance(dt, str):
+        try:
+            dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return dt
+            
+    now = datetime.utcnow()
+    diff = now - dt
+    
+    seconds = diff.total_seconds()
+    
+    if seconds < 60:
+        return "Just now"
+    elif seconds < 3600:
+        minutes = int(seconds / 60)
+        return f"{minutes} min{'s' if minutes > 1 else ''} ago"
+    elif seconds < 86400:
+        hours = int(seconds / 3600)
+        return f"{hours} hour{'s' if hours > 1 else ''} ago"
+    elif seconds < 604800:
+        days = int(seconds / 86400)
+        return f"{days} day{'s' if days > 1 else ''} ago"
+    else:
+        return dt.strftime("%Y-%m-%d")
+
 # Gemini Configuration
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -317,7 +347,30 @@ def dashboard():
 @require_role('admin', 'cs', 'client')
 def meetings():
     user = get_current_user()
-    return render_template('meetings.html', user=user)
+    conn = get_db_connection()
+    
+    # Base query joining candidates and users
+    query = """
+        SELECT m.*, 
+               c.name as candidate_name, c.role_type, c.avatar_url,
+               u.username as client_name, u.email as client_email
+        FROM meetings m
+        JOIN candidates c ON m.candidate_id = c.id
+        JOIN users u ON m.client_id = u.id
+    """
+    
+    if user['role'] == 'client':
+        # Clients only see their own meeting requests
+        query += " WHERE m.client_id = ? ORDER BY m.created_at DESC"
+        meetings_list = conn.execute(query, (user['id'],)).fetchall()
+    else:
+        # Admins and CS see all meeting requests
+        query += " ORDER BY m.created_at DESC"
+        meetings_list = conn.execute(query).fetchall()
+        
+    conn.close()
+    
+    return render_template('meetings.html', user=user, meetings=meetings_list)
 
 @app.route('/notifications')
 @require_role('admin', 'cs', 'client')
@@ -411,6 +464,7 @@ def candidates():
     search = request.args.get('search', '')
     experience = request.args.get('experience', '')
     availability = request.args.get('availability', '')
+    location = request.args.get('location', '')
     
     params = []
     if user['role'] == 'client':
@@ -420,7 +474,6 @@ def candidates():
             JOIN assignments a ON c.id = a.candidate_id 
             JOIN users u ON a.client_id = u.id 
             WHERE a.client_id = ?
-            GROUP BY c.id
         """
         params.append(user['id'])
     else:
@@ -430,7 +483,6 @@ def candidates():
             LEFT JOIN assignments a ON c.id = a.candidate_id 
             LEFT JOIN users u ON a.client_id = u.id 
             WHERE 1=1
-            GROUP BY c.id
         """
     
     if search:
@@ -445,17 +497,24 @@ def candidates():
     if availability and availability != 'All':
         query += " AND c.availability LIKE ?"
         params.append(f'%{availability}%')
+
+    if location and location != 'All':
+        query += " AND c.location = ?"
+        params.append(location)
         
-    query += " ORDER BY c.sort_order ASC, c.name ASC"
+    query += " GROUP BY c.id ORDER BY c.sort_order ASC, c.name ASC"
         
     conn = get_db_connection()
     candidate_list = conn.execute(query, params).fetchall()
+    
+    # Get unique locations for the filter
+    locations = [row[0] for row in conn.execute("SELECT DISTINCT location FROM candidates WHERE location IS NOT NULL AND location != '' AND location != 'Delhi, India'").fetchall()]
     conn.close()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify([dict(row) for row in candidate_list])
     
-    return render_template('candidates.html', candidates=candidate_list, user=user)
+    return render_template('candidates.html', candidates=candidate_list, user=user, locations=locations)
 
 @app.route('/add-candidate')
 @require_role('admin', 'cs')
@@ -613,7 +672,7 @@ def get_user(id):
 @app.route('/api/users/update/<int:id>', methods=['POST'])
 @require_role('admin')
 def update_user_api(id):
-    data = request.json or request.form
+    data = request.form if request.form else request.json
     username = bleach.clean(data.get('username', '')).strip()
     email = bleach.clean(data.get('email', '')).strip()
     role = bleach.clean(data.get('role', 'client'))
@@ -625,16 +684,30 @@ def update_user_api(id):
     try:
         # Check duplicates
         existing = conn.execute(
-            "SELECT id FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?", 
+            "SELECT id, avatar_url FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?", 
             (username, email, id)
         ).fetchone()
         
         if existing:
             return jsonify({"success": False, "message": "Username or Email already in use"}), 400
 
+        # Handle avatar upload
+        avatar_url = request.form.get('current_avatar', '')
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file and file.filename:
+                if not allowed_file(file.filename, 'avatars'):
+                    return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
+                
+                from werkzeug.utils import secure_filename
+                filename = secure_filename(f"{username}_{file.filename}")
+                upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
+                file.save(upload_path)
+                avatar_url = f"/static/uploads/avatars/{filename}"
+
         conn.execute(
-            "UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?",
-            (username, email, role, id)
+            "UPDATE users SET username = ?, email = ?, role = ?, avatar_url = ? WHERE id = ?",
+            (username, email, role, avatar_url, id)
         )
         conn.commit()
         log_action('UPDATE_USER', id)
@@ -904,9 +977,23 @@ def request_meeting_api():
         logger.info(f"Attempting to send email via Resend to {receiver_emails}...")
         
         # 1. Record the meeting request in the database and portal notifications FIRST
-        # This ensures the "Team" always receives the request even if email fails
+        # Insert the meeting record
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO meetings (client_id, candidate_id, status) VALUES (?, ?, ?)",
+            (user['id'], candidate_id, 'Pending')
+        )
+        
+        # Get all Admins and CS team members to send notifications to them
+        team_users = conn.execute("SELECT id FROM users WHERE role IN ('admin', 'cs')").fetchall()
+        conn.commit()
+        conn.close()
+
         log_action('REQUEST_MEETING', candidate_id)
-        create_notification(1, "New Meeting Request", f"Client {client_name} requested a meeting with {candidate_name}")
+        
+        # Send in-app notification to all team members
+        for team_member in team_users:
+            create_notification(team_member['id'], "New Meeting Request", f"Client {client_name} requested a meeting with {candidate_name}")
         
         # 2. Attempt to send the email notification as a secondary action
         # We re-verify the API key here to ensure it's picked up from the latest .env
@@ -918,10 +1005,10 @@ def request_meeting_api():
                 params = {
                     "from": from_email,
                     "to": [email_to],
-                    "subject": "Urgent !!! Candidate available",
+                    "subject": "Urgent !! Candidate available",
                     "html": f"""
                         <div style='font-family: sans-serif; padding: 20px; color: #333;'>
-                            <h2 style='color: #22c55e;'><b style='color: red;'>Urgent</b> !!! Candidate available</h2>
+                            <h2 style='color: #22c55e; font-weight: normal;'><span style='color: red;'>Urgent !!</span> Candidate available</h2>
                             <hr style='border: 1px solid #eee;' />
                             <p><strong>New Meeting Request</strong></p>
                             <p><strong>Client:</strong> {client_name} ({client_email})</p>
@@ -943,6 +1030,53 @@ def request_meeting_api():
         
     except Exception as e:
         logger.error(f"Meeting request error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/meetings/status/<int:meeting_id>', methods=['POST'])
+@require_role('admin', 'cs')
+def update_meeting_status(meeting_id):
+    data = request.json
+    new_status = data.get('status')
+    
+    valid_statuses = ['Pending', 'Accepted', 'Scheduled', 'Completed', 'Cancelled']
+    if new_status not in valid_statuses:
+        return jsonify({'error': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'}), 400
+    
+    try:
+        conn = get_db_connection()
+        
+        # Get the meeting details before updating
+        meeting = conn.execute("""
+            SELECT m.*, c.name as candidate_name 
+            FROM meetings m 
+            JOIN candidates c ON m.candidate_id = c.id 
+            WHERE m.id = ?
+        """, (meeting_id,)).fetchone()
+        
+        if not meeting:
+            conn.close()
+            return jsonify({'error': 'Meeting not found'}), 404
+        
+        # Update the status
+        conn.execute(
+            "UPDATE meetings SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (new_status, meeting_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        # Notify the client about the status change
+        create_notification(
+            meeting['client_id'],
+            "Meeting Status Updated",
+            f"Your meeting request for {meeting['candidate_name']} has been updated to: {new_status}"
+        )
+        
+        log_action('UPDATE_MEETING_STATUS', meeting_id)
+        return jsonify({'status': 'success', 'message': f'Meeting status updated to {new_status}'})
+        
+    except Exception as e:
+        logger.error(f"Update meeting status error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/candidate/<int:id>')
@@ -1079,17 +1213,88 @@ def update_profile():
 @app.route('/profile')
 @require_role('admin', 'cs', 'client')
 def profile():
-    user = get_current_user()
+    # Make sure we get the absolute latest user data with the new columns
+    conn = get_db_connection()
+    user_row = conn.execute("SELECT * FROM users WHERE id = ?", (get_current_user()['id'],)).fetchone()
+    conn.close()
     
-    # Mock activity and settings
+    if user_row:
+        user = dict(user_row)
+    else:
+        user = get_current_user()
+    
+    
+    # Mock activity and settings (now using real datetimes for the filter)
+    from datetime import timedelta
+    now_utc = datetime.utcnow()
     activities = [
-        {'title': 'Logged into the system', 'time': 'Today, 10:30 AM', 'type': 'login'},
-        {'title': 'Started working session', 'time': 'Today, 10:32 AM', 'subtitle': 'Working: 10:32 AM - 12:45 PM (2h 13m)', 'type': 'work'},
-        {'title': 'Took a break', 'time': 'Today, 12:45 PM', 'subtitle': 'Away: 12:45 PM - 1:15 PM (30m)', 'type': 'break', 'active': True},
-        {'title': 'Updated profile settings', 'time': 'Yesterday, 4:20 PM', 'type': 'update'}
+        {'title': 'Logged into the system', 'time': now_utc - timedelta(hours=10), 'type': 'login'},
+        {'title': 'Started working session', 'time': now_utc - timedelta(hours=9, minutes=58), 'subtitle': f'Working for 2h 13m', 'type': 'work'},
+        {'title': 'Took a break', 'time': now_utc - timedelta(hours=8, minutes=5), 'subtitle': 'Away for 30m', 'type': 'break', 'active': True},
+        {'title': 'Updated profile settings', 'time': now_utc - timedelta(days=1), 'type': 'update'}
     ]
     
     return render_template('profile.html', user=user, activities=activities)
+
+@app.route('/api/profile/security', methods=['POST'])
+@require_role('admin', 'cs', 'client')
+def update_security():
+    user = get_current_user()
+    data = request.json
+    
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    
+    if not current_password or not new_password:
+        return jsonify({'success': False, 'message': 'Both current and new passwords are required'}), 400
+        
+    conn = get_db_connection()
+    try:
+        user_record = conn.execute("SELECT password FROM users WHERE id = ?", (user['id'],)).fetchone()
+        
+        from werkzeug.security import check_password_hash, generate_password_hash
+        
+        # In a real app we'd use check_password_hash, but for this demo check both raw and hashed
+        # because the demo seed sometimes uses raw 'demo123' and sometimes hashed.
+        if check_password_hash(user_record['password'], current_password) or user_record['password'] == current_password:
+            new_hashed = generate_password_hash(new_password)
+            conn.execute("UPDATE users SET password = ? WHERE id = ?", (new_hashed, user['id']))
+            conn.commit()
+            log_action('UPDATE_SECURITY', user['id'])
+            return jsonify({'success': True, 'message': 'Password updated successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Incorrect current password'}), 400
+    except Exception as e:
+        logger.error(f"Security update error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/profile/preferences', methods=['POST'])
+@require_role('admin', 'cs', 'client')
+def update_preferences():
+    user = get_current_user()
+    data = request.json
+    
+    notif_email = 1 if data.get('notifications_email') else 0
+    notif_desktop = 1 if data.get('notifications_desktop') else 0
+    privacy_visibility = data.get('privacy_profile_visibility', 'Public')
+    
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+            UPDATE users 
+            SET notifications_email = ?, notifications_desktop = ?, privacy_profile_visibility = ? 
+            WHERE id = ?
+        """, (notif_email, notif_desktop, privacy_visibility, user['id']))
+        conn.commit()
+        log_action('UPDATE_PREFERENCES', user['id'])
+        return jsonify({'success': True, 'message': 'Preferences saved successfully'})
+    except Exception as e:
+        logger.error(f"Preferences update error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/chat', methods=['POST'])
 @require_role('admin', 'cs', 'client')
@@ -1302,6 +1507,41 @@ def reorder_candidates():
         conn.close()
         log_action('REORDER_CANDIDATES', 0)
         return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/candidates/grade/<int:candidate_id>', methods=['POST'])
+@require_role('admin', 'cs')
+def update_candidate_grade(candidate_id):
+    """Update the internal grading scores for a candidate."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    allowed_fields = {'personality_grade', 'accent_grade', 'professionalism_grade', 'technical_grade'}
+    updates = {}
+    for field in allowed_fields:
+        if field in data:
+            try:
+                val = float(data[field])
+                if not (0 <= val <= 5):
+                    return jsonify({'error': f'{field} must be between 0 and 5'}), 400
+                updates[field] = val
+            except (TypeError, ValueError):
+                return jsonify({'error': f'Invalid value for {field}'}), 400
+
+    if not updates:
+        return jsonify({'error': 'No valid grade fields provided'}), 400
+
+    try:
+        conn = get_db_connection()
+        set_clause = ', '.join(f"{k} = ?" for k in updates)
+        values = list(updates.values()) + [candidate_id]
+        conn.execute(f"UPDATE candidates SET {set_clause} WHERE id = ?", values)
+        conn.commit()
+        conn.close()
+        log_action('UPDATE_GRADES', candidate_id)
+        return jsonify({'status': 'success', 'message': 'Grades updated successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

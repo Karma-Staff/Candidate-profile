@@ -15,6 +15,10 @@ backend/.env
 # Database
 backend/*.db
 !backend/seed_production.db
+*.db-shm
+*.db-wal
+platform.db
+lms.db
 
 # Uploads (keep directories, ignore files)
 frontend/static/uploads/avatars/*
@@ -33,3 +37,10 @@ frontend/static/uploads/videos/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Test & scratch files
+backend/test_*.txt
+backend/test_*.py
+backend/check_*.py
+backend/available_models.txt
+grep.txt

@@ -290,7 +290,8 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    color: var(--text-light);
+    color: var(--white);
+    opacity: 1;
     text-decoration: none;
     border-radius: 10px;
     font-weight: 500;
@@ -300,26 +301,31 @@ body {
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
-    color: var(--accent);
+    background: #1e293b;
+    /* Dark slate blue pill background */
+    color: #60a5fa;
+    /* Brighter blue text */
     font-weight: 600;
 }
 
 .nav-item.active::after {
     content: '';
     position: absolute;
-    bottom: -0.75rem;
+    bottom: -1rem;
+    /* Pushed significantly down, detached from the pill */
     left: 50%;
     transform: translateX(-50%);
-    width: 20px;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 1px;
+    width: 24px;
+    height: 3px;
+    background: #3b82f6;
+    /* Solid bright blue indicator */
+    border-radius: 2px;
 }
 
 .nav-item:hover:not(.active) {
     background: var(--glass-strong);
-    color: var(--text);
+    color: var(--white);
+    opacity: 1;
     transform: translateY(-1px);
 }
 

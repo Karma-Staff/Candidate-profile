@@ -103,12 +103,12 @@
         </div>
     </div>
 
-    <!-- Contact Information -->
+    <!-- Contact Information (hidden for client role) -->
+    {% if user.role != 'client' %}
     <div class="card animate-in delay-2"
         style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
         <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Contact Information</h3>
         <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem;">
-            {% if user.role != 'client' %}
             <div style="display: flex; align-items: center; gap: 1rem; color: #afdaff;">
                 <i data-lucide="mail" style="width: 18px;"></i>
                 <span style="text-decoration: underline;">{{ candidate.email }}</span>
@@ -117,15 +117,6 @@
                 <i data-lucide="phone" style="width: 18px;"></i>
                 <span>{{ candidate.phone or 'Not provided' }}</span>
             </div>
-            {% else %}
-            <div
-                style="padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
-                <i data-lucide="eye-off" style="width: 24px; color: #94a3b8; margin-bottom: 0.5rem;"></i>
-                <div style="color: #94a3b8; font-size: 0.875rem;">Contact information is hidden for privacy.</div>
-                <div style="color: #afdaff; font-size: 0.8125rem; margin-top: 0.25rem;">Request a meeting to connect.
-                </div>
-            </div>
-            {% endif %}
         </div>
         <div
             style="background: rgba(34, 197, 94, 0.05); color: #22c55e; padding: 0.75rem 1.25rem; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.1); display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
@@ -133,8 +124,10 @@
             This information is confidential and logged for compliance
         </div>
     </div>
+    {% endif %}
 
     <!-- Internal Candidate Grading -->
+    {% if user.role != 'client' %}
     <div class="card animate-in delay-2"
         style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;">
@@ -143,30 +136,40 @@
             <span class="badge"
                 style="background: rgba(168, 85, 247, 0.1); color: #a855f7; font-size: 0.625rem; padding: 0.25rem 0.75rem;">Internal
                 Use Only</span>
+            <span id="gradeSavedIndicator"
+                style="margin-left: auto; font-size: 0.75rem; color: #22c55e; opacity: 0; transition: opacity 0.4s ease; display: flex; align-items: center; gap: 0.35rem;">
+                <i data-lucide="check-circle" style="width: 14px;"></i> Saved
+            </span>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2.5rem;">
-            <!-- Category Helper Function Proxy -->
             {% set grades = [
-            ('Personality', candidate.personality_grade),
-            ('Accent / Clarity', candidate.accent_grade),
-            ('Professionalism', candidate.accent_grade),
-            ('Technical Skills', candidate.technical_grade)
+            ('Personality', 'personality_grade', candidate.personality_grade),
+            ('Accent / Clarity', 'accent_grade', candidate.accent_grade),
+            ('Professionalism', 'professionalism_grade', candidate.professionalism_grade or 0),
+            ('Technical Skills', 'technical_grade', candidate.technical_grade)
             ] %}
 
-            {% for label, score in grades %}
+            {% for label, field, score in grades %}
             <div>
                 <div style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.75rem;">{{ label }}</div>
-                <div style="display: flex; gap: 0.25rem;">
+                <div class="star-row" data-field="{{ field }}" data-candidate-id="{{ candidate.id }}"
+                    style="display: flex; gap: 0.25rem; cursor: pointer;">
                     {% for i in range(1, 6) %}
-                    <i data-lucide="star" class="{% if i <= score %}star-filled{% else %}star-empty{% endif %}"
-                        style="width: 20px; height: 20px;"></i>
+                    <i data-lucide="star"
+                        class="star-icon {% if i <= score %}star-filled{% else %}star-empty{% endif %}"
+                        data-value="{{ i }}"
+                        style="width: 22px; height: 22px; transition: transform 0.15s ease, color 0.15s ease;"
+                        onmouseenter="hoverStars(this)" onmouseleave="resetStars(this.closest('.star-row'))"
+                        onclick="setGrade(this)">
+                    </i>
                     {% endfor %}
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
     <!-- About Section -->
     <div class="card animate-in delay-3"
@@ -307,5 +310,89 @@
                 lucide.createIcons();
             });
     }
+
+    // ── Star Rating Interactivity ──────────────────────────────
+    function hoverStars(hoveredStar) {
+        const row = hoveredStar.closest('.star-row');
+        const hoverVal = parseInt(hoveredStar.dataset.value);
+        row.querySelectorAll('.star-icon').forEach(s => {
+            const v = parseInt(s.dataset.value);
+            s.style.transform = v <= hoverVal ? 'scale(1.2)' : 'scale(1)';
+            if (v <= hoverVal) {
+                s.classList.add('star-filled');
+                s.classList.remove('star-empty');
+            } else {
+                s.classList.add('star-empty');
+                s.classList.remove('star-filled');
+            }
+        });
+    }
+
+    function resetStars(row) {
+        const savedVal = parseInt(row.dataset.savedValue || row.dataset.currentValue || 0);
+        row.querySelectorAll('.star-icon').forEach(s => {
+            const v = parseInt(s.dataset.value);
+            s.style.transform = 'scale(1)';
+            if (v <= savedVal) {
+                s.classList.add('star-filled');
+                s.classList.remove('star-empty');
+            } else {
+                s.classList.add('star-empty');
+                s.classList.remove('star-filled');
+            }
+        });
+    }
+
+    function setGrade(clickedStar) {
+        const row = clickedStar.closest('.star-row');
+        const field = row.dataset.field;
+        const candidateId = row.dataset.candidateId;
+        const value = parseInt(clickedStar.dataset.value);
+
+        // Optimistically save the value in data attribute
+        row.dataset.savedValue = value;
+
+        // Update visual immediately
+        row.querySelectorAll('.star-icon').forEach(s => {
+            const v = parseInt(s.dataset.value);
+            s.style.transform = 'scale(1)';
+            if (v <= value) {
+                s.classList.add('star-filled');
+                s.classList.remove('star-empty');
+            } else {
+                s.classList.add('star-empty');
+                s.classList.remove('star-filled');
+            }
+        });
+
+        // Save to API
+        fetch(`/api/candidates/grade/${candidateId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [field]: value })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const indicator = document.getElementById('gradeSavedIndicator');
+                    if (indicator) {
+                        indicator.style.opacity = '1';
+                        setTimeout(() => { indicator.style.opacity = '0'; }, 2000);
+                    }
+                } else {
+                    showToast(data.error || 'Failed to save grade', 'error');
+                }
+            })
+            .catch(() => showToast('Failed to save grade', 'error'));
+    }
+
+    // Store initial grade values as data attributes after page load
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.star-row').forEach(row => {
+            const filled = row.querySelectorAll('.star-filled').length;
+            row.dataset.savedValue = filled;
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
 </script>
 {% endblock %}

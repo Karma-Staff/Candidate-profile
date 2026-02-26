@@ -7,7 +7,7 @@
     <title>Karma Staff — Restore Talent Platform</title>
     <meta name="description"
         content="Karma Staff Talent Platform - Browse and connect with top restoration professionals">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,10 +36,12 @@
         </button>
 
         <nav class="nav-links" id="navLinks">
-            <a href="{{ url_for('candidates') }}" class="nav-item {{ 'active' if request.endpoint == 'candidates' }}">
+            <a href="{{ url_for('candidates') }}"
+                class="nav-item {{ 'active' if request.endpoint in ['candidates', 'candidate_profile', 'add_candidate_page'] else '' }}">
                 <i data-lucide="users" style="width: 18px;"></i> Candidates
             </a>
-            <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
+            <a href="{{ url_for('dashboard') }}"
+                class="nav-item {{ 'active' if request.endpoint in ['dashboard', 'dashboard_page'] else '' }}">
                 <i data-lucide="layout-dashboard" style="width: 18px;"></i> Dashboard
             </a>
 
@@ -53,7 +55,7 @@
                 <i data-lucide="user-plus" style="width: 18px;"></i> Assign
             </a>
             <a href="{{ url_for('user_management') }}"
-                class="nav-item {{ 'active' if request.endpoint == 'user_management' }}">
+                class="nav-item {{ 'active' if request.endpoint in ['user_management', 'manage_users', 'add_user'] else '' }}">
                 <i data-lucide="settings" style="width: 18px;"></i> Users
             </a>
             <a href="{{ url_for('ai_agent') }}" class="nav-item {{ 'active' if request.endpoint == 'ai_agent' }}">
@@ -64,6 +66,10 @@
                 <i data-lucide="sparkles" style="width: 18px;"></i> Recruiter AI
             </a>
             {% endif %}
+
+            <a href="{{ url_for('profile') }}" class="nav-item {{ 'active' if request.endpoint == 'profile' }}">
+                <i data-lucide="user" style="width: 18px;"></i> Profile
+            </a>
         </nav>
 
         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -216,7 +222,7 @@
     {% endif %}
 
     <script>
-        lucide.createIcons();
+        // Icons are initialized at the end of body to ensure all elements are rendered
 
         function showToast(message, type) {
             const container = document.getElementById('toast-container');
@@ -411,6 +417,12 @@
                 var nav = document.getElementById('navLinks');
                 if (nav) nav.classList.remove('open');
             }
+        }
+    </script>
+    <script>
+        // Run after all page content (including child templates) is parsed
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
         }
     </script>
 </body>

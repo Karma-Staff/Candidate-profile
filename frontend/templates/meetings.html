@@ -10,13 +10,165 @@
     </div>
 </div>
 
-<div class="empty-state animate-in delay-1">
-    <div class="empty-state-icon">
-        <i data-lucide="calendar" style="width: 36px; height: 36px; color: var(--accent);"></i>
+<div class="card animate-in delay-1"
+    style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+    {% if meetings %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
+                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.875rem;">
+                        Candidate</th>
+                    {% if user.role != 'client' %}
+                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.875rem;">
+                        Requested By</th>
+                    {% endif %}
+                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.875rem;">
+                        Status</th>
+                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.875rem;">
+                        Date Requested</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meeting in meetings %}
+                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="avatar"
+                                style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #1e293b; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                {% if meeting.avatar_url %}
+                                <img src="{{ meeting.avatar_url }}"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <span style="font-weight: 600; color: white;">{{ meeting.candidate_name[:1].upper()
+                                    }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{{ url_for('candidate_profile', id=meeting.candidate_id) }}"
+                                    style="font-weight: 600; color: white; text-decoration: none; display: block; margin-bottom: 0.25rem;">
+                                    {{ meeting.candidate_name }}
+                                </a>
+                                <span style="font-size: 0.875rem; color: var(--text-muted);">{{ meeting.role_type
+                                    }}</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    {% if user.role != 'client' %}
+                    <td style="padding: 1rem 1.5rem;">
+                        <div style="font-weight: 500; color: white; margin-bottom: 0.25rem;">{{ meeting.client_name }}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">{{ meeting.client_email }}</div>
+                    </td>
+                    {% endif %}
+
+                    <td style="padding: 1rem 1.5rem;">
+                        {% if user.role != 'client' %}
+                        <!-- Admin/CS: Interactive status dropdown -->
+                        <select id="status-{{ meeting.id }}"
+                            onchange="updateMeetingStatus({{ meeting.id }}, this.value)"
+                            style="background: var(--surface-hover); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; outline: none; appearance: auto;">
+                            <option value="Pending" {% if meeting.status=='Pending' %}selected{% endif %}
+                                style="background: #1e293b;">⏳ Pending</option>
+                            <option value="Accepted" {% if meeting.status=='Accepted' %}selected{% endif %}
+                                style="background: #1e293b;">✅ Accepted</option>
+                            <option value="Scheduled" {% if meeting.status=='Scheduled' %}selected{% endif %}
+                                style="background: #1e293b;">📅 Scheduled</option>
+                            <option value="Completed" {% if meeting.status=='Completed' %}selected{% endif %}
+                                style="background: #1e293b;">🎉 Completed</option>
+                            <option value="Cancelled" {% if meeting.status=='Cancelled' %}selected{% endif %}
+                                style="background: #1e293b;">❌ Cancelled</option>
+                        </select>
+                        <span id="save-indicator-{{ meeting.id }}"
+                            style="display: none; color: #22c55e; font-size: 0.75rem; margin-left: 0.5rem;">✓
+                            Saved</span>
+                        {% else %}
+                        <!-- Client: Static badge -->
+                        {% set badge_styles = {
+                        'Pending': 'background: rgba(234,179,8,0.15); color: #eab308; border-color:
+                        rgba(234,179,8,0.3);',
+                        'Accepted': 'background: rgba(34,197,94,0.15); color: #22c55e; border-color:
+                        rgba(34,197,94,0.3);',
+                        'Scheduled': 'background: rgba(59,130,246,0.15); color: #3b82f6; border-color:
+                        rgba(59,130,246,0.3);',
+                        'Completed': 'background: rgba(34,197,94,0.15); color: #22c55e; border-color:
+                        rgba(34,197,94,0.3);',
+                        'Cancelled': 'background: rgba(239,68,68,0.15); color: #ef4444; border-color:
+                        rgba(239,68,68,0.3);'
+                        } %}
+                        <span class="badge"
+                            style="{{ badge_styles.get(meeting.status, badge_styles['Pending']) }} border: 1px solid; padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 6px;">
+                            {{ meeting.status }}
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.875rem;">
+                        {{ meeting.created_at }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: white;">No meetings scheduled yet</h2>
-    <p style="color: var(--text-light); font-size: 1rem; max-width: 400px; margin: 0 auto;">
-        You will be able to track interviews, follow-ups, and client meetings here once they are scheduled.
-    </p>
+    {% else %}
+    <div class="empty-state" style="padding: 4rem 2rem;">
+        <div class="empty-state-icon">
+            <i data-lucide="calendar" style="width: 36px; height: 36px; color: var(--accent);"></i>
+        </div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: white;">No meetings scheduled yet</h2>
+        <p style="color: var(--text-light); font-size: 1rem; max-width: 400px; margin: 0 auto;">
+            {% if user.role == 'client' %}
+            You haven't requested any meetings with candidates yet. Browse the candidates page to find someone who fits
+            your needs.
+            {% else %}
+            There are no meeting requests from clients at this time.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
 </div>
+
+{% if user.role != 'client' %}
+<script>
+    async function updateMeetingStatus(meetingId, newStatus) {
+        const indicator = document.getElementById('save-indicator-' + meetingId);
+        const dropdown = document.getElementById('status-' + meetingId);
+
+        try {
+            dropdown.disabled = true;
+            const response = await fetch('/api/meetings/status/' + meetingId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Show saved indicator
+                indicator.style.display = 'inline';
+                setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+
+                if (typeof showToast === 'function') {
+                    showToast('Status updated to ' + newStatus, 'success');
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(data.error || 'Failed to update status', 'error');
+                }
+            }
+        } catch (err) {
+            if (typeof showToast === 'function') {
+                showToast('Network error. Please try again.', 'error');
+            }
+        } finally {
+            dropdown.disabled = false;
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}

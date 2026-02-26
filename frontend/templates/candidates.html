@@ -81,6 +81,15 @@
                     <option value="Next Month">Next Month</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <span>Location:</span>
+                <select id="locationFilter" class="filter-select" onchange="updateFilters()">
+                    <option value="All">All</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc }}">{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div style="margin-left: auto; font-size: 0.8125rem; color: var(--text-lighter);">
                 Showing <strong id="candidateCount" style="color: var(--text);">{{ candidates | length }}</strong>
                 candidates
@@ -249,11 +258,13 @@
             const search = document.getElementById('searchInput').value;
             const experience = document.getElementById('experienceFilter').value;
             const availability = document.getElementById('availabilityFilter').value;
+            const location = document.getElementById('locationFilter').value;
 
             const params = new URLSearchParams({
                 search: search,
                 experience: experience,
-                availability: availability
+                availability: availability,
+                location: location
             });
 
             try {
@@ -361,10 +372,12 @@
         const searchInput = document.getElementById('searchInput');
         const experienceFilter = document.getElementById('experienceFilter');
         const availabilityFilter = document.getElementById('availabilityFilter');
+        const locationFilter = document.getElementById('locationFilter');
 
         const isFiltered = (searchInput && searchInput.value) ||
             (experienceFilter && experienceFilter.value !== 'All') ||
-            (availabilityFilter && availabilityFilter.value !== 'All');
+            (availabilityFilter && availabilityFilter.value !== 'All') ||
+            (locationFilter && locationFilter.value !== 'All');
 
         if (grid && window.userRole !== 'client') {
             // Destroy existing if any

@@ -253,7 +253,8 @@
 
         <!-- Quick Access -->
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;" class="animate-in delay-3">
-            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;"
+                onclick="openModal('modal-security')">
                 <div
                     style="width: 40px; height: 40px; background: var(--accent-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
                     <i data-lucide="shield" style="width: 20px; color: var(--accent);"></i>
@@ -261,7 +262,8 @@
                 <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Security</div>
                 <div style="font-size: 0.75rem; color: var(--text-lighter);">Password, 2FA, Sessions</div>
             </div>
-            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;"
+                onclick="openModal('modal-notifications')">
                 <div
                     style="width: 40px; height: 40px; background: var(--success-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
                     <i data-lucide="bell" style="width: 20px; color: var(--success);"></i>
@@ -269,7 +271,8 @@
                 <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Notifications</div>
                 <div style="font-size: 0.75rem; color: var(--text-lighter);">Email, Desktop, Mobile</div>
             </div>
-            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;">
+            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;"
+                onclick="openModal('modal-privacy')">
                 <div
                     style="width: 40px; height: 40px; background: var(--warning-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
                     <i data-lucide="lock" style="width: 20px; color: var(--warning);"></i>
@@ -296,7 +299,8 @@
                         <div style="font-size: 0.8125rem; font-weight: 500; color: var(--text-light);">{{
                             activity.subtitle }}</div>
                         {% endif %}
-                        <div style="font-size: 0.8125rem; color: var(--text-lighter);">{{ activity.time }}</div>
+                        <div style="font-size: 0.8125rem; color: var(--text-lighter);">{{ activity.time | timesince }}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -304,4 +308,306 @@
         </div>
     </div>
 </div>
+
+<!-- Modals for Settings Cards -->
+<style>
+    .pref-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.85);
+        /* Darker blur backdrop */
+        backdrop-filter: blur(8px);
+        z-index: 9998;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
+    }
+
+    .pref-modal {
+        background: #1e293b;
+        /* Slate 800 for better contrast */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 480px;
+        padding: 2.5rem;
+        transform: translateY(20px);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        color: #f8fafc;
+    }
+
+    .pref-modal.show {
+        transform: translateY(0);
+    }
+
+    /* Fix the Toast Z-Index so it shows above the modal */
+    .toast-container {
+        z-index: 99999 !important;
+    }
+
+    .toast {
+        z-index: 99999 !important;
+    }
+
+    /* Modal Form Inputs */
+    .pref-modal .search-input {
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 0.875rem 1rem;
+        border-radius: 10px;
+        transition: border-color 0.2s;
+    }
+
+    .pref-modal .search-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+    }
+
+    /* Better Checkbox Alignment */
+    .pref-checkbox-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: background 0.2s;
+    }
+
+    .pref-checkbox-row:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+</style>
+
+<!-- Security Modal -->
+<div id="modal-security" class="pref-modal-overlay" onclick="if(event.target===this) closeModal('modal-security')">
+    <div class="pref-modal">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Security Settings</h3>
+            <button class="btn-ghost" onclick="closeModal('modal-security')"
+                style="background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 0.5rem; border-radius: 8px;">
+                <i data-lucide="x" style="width: 24px;"></i>
+            </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" id="sec-current-pwd" class="search-input"
+                    style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" id="sec-new-pwd" class="search-input"
+                    style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" id="sec-confirm-pwd" class="search-input"
+                    style="width: 100%; box-sizing: border-box;">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+            <button class="btn btn-primary" onclick="saveSecurity()" id="btn-save-sec">Update Password</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications Modal -->
+<div id="modal-notifications" class="pref-modal-overlay"
+    onclick="if(event.target===this) closeModal('modal-notifications')">
+    <div class="pref-modal">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Notification Preferences</h3>
+            <button class="btn-ghost" onclick="closeModal('modal-notifications')"
+                style="background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 0.5rem; border-radius: 8px;">
+                <i data-lucide="x" style="width: 24px;"></i>
+            </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+            <label class="pref-checkbox-row">
+                <div>
+                    <div style="font-weight: 600; font-size: 1rem;">Email Notifications</div>
+                    <div style="font-size: 0.8125rem; color: #94a3b8; margin-top: 0.25rem;">Receive updates directly to
+                        your inbox.</div>
+                </div>
+                <!-- Adding a custom-colored modern checkbox -->
+                <input type="checkbox" id="pref-email" {% if user.notifications_email !=0 %}checked{% endif %}
+                    style="width: 24px; height: 24px; accent-color: #3b82f6; cursor: pointer;">
+            </label>
+            <label class="pref-checkbox-row">
+                <div>
+                    <div style="font-weight: 600; font-size: 1rem;">Desktop Notifications</div>
+                    <div style="font-size: 0.8125rem; color: #94a3b8; margin-top: 0.25rem;">Show popup alerts when
+                        active.</div>
+                </div>
+                <input type="checkbox" id="pref-desktop" {% if user.notifications_desktop !=0 %}checked{% endif %}
+                    style="width: 24px; height: 24px; accent-color: #3b82f6; cursor: pointer;">
+            </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+            <button class="btn btn-primary" onclick="savePreferences()" id="btn-save-notif">Save Preferences</button>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div id="modal-privacy" class="pref-modal-overlay" onclick="if(event.target===this) closeModal('modal-privacy')">
+    <div class="pref-modal">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Privacy Settings</h3>
+            <button class="btn-ghost" onclick="closeModal('modal-privacy')"
+                style="background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 0.5rem; border-radius: 8px;">
+                <i data-lucide="x" style="width: 24px;"></i>
+            </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label">Profile Visibility</label>
+                <select id="pref-visibility" class="search-input"
+                    style="width: 100%; box-sizing: border-box; padding: 0.75rem;">
+                    <option value="Public" {% if user.privacy_profile_visibility=='Public' %}selected{% endif %}>Public
+                        (Everyone)</option>
+                    <option value="Internal" {% if user.privacy_profile_visibility=='Internal' %}selected{% endif %}>
+                        Internal Only (Team)</option>
+                    <option value="Private" {% if user.privacy_profile_visibility=='Private' %}selected{% endif %}>
+                        Private (Only Me)</option>
+                </select>
+                <div style="font-size: 0.75rem; color: var(--text-lighter); margin-top: 0.5rem;">Control who can see
+                    your contact info internally.</div>
+            </div>
+            <div
+                style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius);">
+                <div style="font-weight: 600; color: #ef4444; margin-bottom: 0.25rem;">Export Data</div>
+                <div style="font-size: 0.75rem; color: var(--text-lighter); margin-bottom: 0.75rem;">Download a copy of
+                    your personal data.</div>
+                <button class="btn btn-outline" style="font-size: 0.75rem; color: white;"
+                    onclick="showToast('Your data export is being generated. You will receive an email shortly.', 'info')">Request
+                    Export</button>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+            <button class="btn btn-primary" onclick="savePreferences()" id="btn-save-priv">Save Preferences</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ensure icons are initialized on the profile page
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        modal.style.display = 'flex';
+        // Force reflow
+        void modal.offsetWidth;
+        modal.style.opacity = '1';
+        modal.querySelector('.pref-modal').classList.add('show');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        modal.style.opacity = '0';
+        modal.querySelector('.pref-modal').classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 200);
+    }
+
+    async function saveSecurity() {
+        const curr = document.getElementById('sec-current-pwd').value;
+        const newP = document.getElementById('sec-new-pwd').value;
+        const conf = document.getElementById('sec-confirm-pwd').value;
+
+        if (!curr || !newP) {
+            return showToast('Please fill in both password fields.', 'warning');
+        }
+        if (newP !== conf) {
+            return showToast('New passwords do not match.', 'error');
+        }
+
+        const btn = document.getElementById('btn-save-sec');
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        try {
+            const res = await fetch('/api/profile/security', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_password: curr, new_password: newP })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                btn.innerText = "Success!";
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    closeModal('modal-security');
+                    document.getElementById('sec-current-pwd').value = '';
+                    document.getElementById('sec-new-pwd').value = '';
+                    document.getElementById('sec-confirm-pwd').value = '';
+                }, 1000);
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (e) {
+            showToast('Network error occurred.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Update Password";
+        }
+    }
+
+    async function savePreferences() {
+        const email = document.getElementById('pref-email').checked;
+        const desktop = document.getElementById('pref-desktop').checked;
+        const visibility = document.getElementById('pref-visibility').value;
+
+        const btnNotif = document.getElementById('btn-save-notif');
+        const btnPriv = document.getElementById('btn-save-priv');
+        btnNotif.disabled = true;
+        btnPriv.disabled = true;
+
+        try {
+            const res = await fetch('/api/profile/preferences', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    notifications_email: email,
+                    notifications_desktop: desktop,
+                    privacy_profile_visibility: visibility
+                })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                btnNotif.innerText = "Saved!";
+                btnPriv.innerText = "Saved!";
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    closeModal('modal-notifications');
+                    closeModal('modal-privacy');
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (e) {
+            showToast('Network error occurred.', 'error');
+        } finally {
+            btnNotif.disabled = false;
+            btnPriv.disabled = false;
+        }
+    }
+</script>
 {% endblock %}

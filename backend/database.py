@@ -82,6 +82,11 @@ def init_db():
     add_column_safely(cursor, "users", "has_seen_welcome", "INTEGER DEFAULT 0")
     add_column_safely(cursor, "users", "department", "TEXT")
     add_column_safely(cursor, "users", "job_title", "TEXT")
+    
+    # Preferences Columns
+    add_column_safely(cursor, "users", "notifications_email", "INTEGER DEFAULT 1")
+    add_column_safely(cursor, "users", "notifications_desktop", "INTEGER DEFAULT 1")
+    add_column_safely(cursor, "users", "privacy_profile_visibility", "TEXT DEFAULT 'Public'")
 
     # --- Forced Credential Sync ---
     # Ensure the 3 requested demo accounts always work with demo123
@@ -149,6 +154,7 @@ def init_db():
     add_column_safely(cursor, "candidates", "avatar_url", "TEXT")
     add_column_safely(cursor, "candidates", "video_url", "TEXT")
     add_column_safely(cursor, "candidates", "sort_order", "INTEGER DEFAULT 0")
+    add_column_safely(cursor, "candidates", "professionalism_grade", "REAL DEFAULT 0.0")
 
     # Initialize sort_order for existing candidates if it's 0
     cursor.execute("UPDATE candidates SET sort_order = id WHERE sort_order = 0")
@@ -205,6 +211,20 @@ def init_db():
         is_read INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS meetings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        candidate_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending', 'Accepted', 'Scheduled', 'Completed', 'Cancelled')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        notes TEXT,
+        FOREIGN KEY (client_id) REFERENCES users (id),
+        FOREIGN KEY (candidate_id) REFERENCES candidates (id)
     )
     ''')
 

@@ -133,9 +133,8 @@
                 </div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-light);">{{ log.timestamp[:10] }}
-                </div>
-                <div style="font-size: 0.6875rem; color: var(--text-lighter);">{{ log.timestamp[11:16] }}</div>
+                <div style="font-size: 0.8125rem; font-weight: 500; color: var(--accent);">{{ log.timestamp | timesince
+                    }}</div>
             </div>
         </div>
         {% endfor %}

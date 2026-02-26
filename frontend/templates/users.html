@@ -2,6 +2,16 @@
 
 {% block content %}
 <style>
+    .user-avatar {
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .user-avatar:hover {
+        transform: scale(1.05);
+        border-color: var(--accent) !important;
+    }
+
     .user-avatar[data-role-cat="admin"] {
         background: rgba(245, 158, 11, 0.1);
         color: var(--warning);
@@ -57,12 +67,12 @@
 
         <div class="user-info-main" style="display: flex; align-items: center; gap: 1rem;">
             {% if u.avatar_url %}
-            <div class="user-avatar"
+            <div class="user-avatar" onclick="showImagePreview('{{ u.avatar_url }}')"
                 style="width: 44px; height: 44px; border-radius: 10px; overflow: hidden; border: 2px solid var(--border); flex-shrink: 0;">
                 <img src="{{ u.avatar_url }}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             {% else %}
-            <div class="user-avatar"
+            <div class="user-avatar" onclick="showImagePreview(null, '{{ u.role }}')"
                 data-role-cat="{{ 'admin' if u.role == 'admin' else 'client' if u.role == 'client' else 'other' }}"
                 style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
 
@@ -127,6 +137,7 @@
 
         <form id="userForm">
             <input type="hidden" name="user_id" id="editUserId">
+            <input type="hidden" name="current_avatar" id="currentAvatar">
             <div style="display: flex; gap: 2rem; margin-bottom: 2rem; align-items: flex-start;">
                 <!-- Avatar Upload Section (Only for Create) -->
                 <div id="avatarSection" style="flex-shrink: 0; text-align: center;">
@@ -220,6 +231,28 @@
     </div>
 </div>
 
+<!-- Image Preview Modal -->
+<div id="imagePreviewModal" class="modal-overlay"
+    style="display: none; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);"
+    onclick="closeImagePreview()">
+    <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; align-items: center; justify-content: center;"
+        onclick="event.stopPropagation()">
+        <div id="previewContainer"
+            style="position: relative; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <img id="previewImage" src=""
+                style="max-width: 100%; max-height: 80vh; display: none; object-fit: contain;">
+            <div id="previewIcon"
+                style="width: 300px; height: 300px; display: none; align-items: center; justify-content: center; background: var(--glass-strong);">
+                <i data-lucide="user" id="previewLucide" style="width: 120px; height: 120px;"></i>
+            </div>
+            <button onclick="closeImagePreview()" class="btn-ghost"
+                style="position: absolute; top: 1rem; right: 1rem; color: white; background: rgba(0,0,0,0.3); border-radius: 50%; padding: 0.5rem;">
+                <i data-lucide="x" style="width: 24px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     let isEditing = false;
 
@@ -242,13 +275,21 @@
                 title.textContent = 'Edit User';
                 submitBtn.textContent = 'Save Changes';
                 icon.setAttribute('data-lucide', 'user-cog');
-                avatarSection.style.display = 'none';
                 passwordTip.style.display = 'none';
 
                 document.getElementById('editUserId').value = editData.id;
+                document.getElementById('currentAvatar').value = editData.avatar_url || '';
                 document.getElementById('modalUsername').value = editData.username;
                 document.getElementById('modalEmail').value = editData.email;
                 document.getElementById('roleInput').value = editData.role;
+
+                // Load existing avatar if any
+                const avatarPreview = document.getElementById('avatarPreview');
+                if (editData.avatar_url) {
+                    avatarPreview.innerHTML = `<img src="${editData.avatar_url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                } else {
+                    avatarPreview.innerHTML = '<i data-lucide="camera" style="width: 32px; color: var(--text-lighter);"></i>';
+                }
 
                 // Select role card
                 const roleEl = document.querySelector(`.role-option[data-role="${editData.role}"]`);
@@ -257,9 +298,9 @@
                 title.textContent = 'Create New User';
                 submitBtn.textContent = 'Create User';
                 icon.setAttribute('data-lucide', 'user-plus');
-                avatarSection.style.display = 'block';
                 passwordTip.style.display = 'block';
                 document.getElementById('editUserId').value = '';
+                document.getElementById('currentAvatar').value = '';
                 document.getElementById('avatarPreview').innerHTML = '<i data-lucide="camera" style="width: 32px; color: var(--text-lighter);"></i>';
                 selectRole(document.querySelector('.role-option[data-role="client"]'));
             }
@@ -296,22 +337,10 @@
         const url = isEditing ? `/api/users/update/${document.getElementById('editUserId').value}` : '/api/users/create';
 
         try {
-            let response;
-            if (isEditing) {
-                // For editing, we send JSON
-                const jsonData = Object.fromEntries(formData.entries());
-                response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(jsonData)
-                });
-            } else {
-                // For creation, we send FormData (for avatar upload)
-                response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-            }
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
 
             const result = await response.json();
             if (result.success) {
@@ -386,6 +415,34 @@
             }
             reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    function showImagePreview(url, role = null) {
+        const modal = document.getElementById('imagePreviewModal');
+        const img = document.getElementById('previewImage');
+        const iconDiv = document.getElementById('previewIcon');
+        const lucideIcon = document.getElementById('previewLucide');
+
+        if (url && url !== 'None') {
+            img.src = url;
+            img.style.display = 'block';
+            iconDiv.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            iconDiv.style.display = 'flex';
+            const iconName = role === 'admin' ? 'shield' : role === 'client' ? 'briefcase' : 'user-cog';
+            lucideIcon.setAttribute('data-lucide', iconName);
+            const colors = { admin: 'var(--warning)', cs: 'var(--accent)', client: 'var(--success)' };
+            iconDiv.style.color = colors[role] || 'var(--text)';
+            iconDiv.style.background = `rgba(${role === 'admin' ? '245, 158, 11' : role === 'cs' ? '59, 130, 246' : '16, 185, 129'}, 0.05)`;
+        }
+
+        modal.style.display = 'flex';
+        lucide.createIcons();
+    }
+
+    function closeImagePreview() {
+        document.getElementById('imagePreviewModal').style.display = 'none';
     }
 </script>
 {% endblock %}
