@@ -42,5 +42,16 @@ Thumbs.db
 backend/test_*.txt
 backend/test_*.py
 backend/check_*.py
+backend/check_audit.py
 backend/available_models.txt
+backend/search_*.py
+backend/compare_*.py
+backend/consolidate_*.py
+backend/deep_*.py
+backend/exhaustive_*.py
+backend/final_*.py
+backend/find_*.py
+backend/list_*.py
+backend/migrate_*.py
+backend/verify_*.py
 grep.txt

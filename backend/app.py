@@ -428,7 +428,7 @@ def login():
             logger.info(f"[AUTH] Login success: user id={user['id']} role={user['role']}")
             log_action('LOGIN')
             if user['role'] in ['admin', 'cs']:
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('candidates'))
             return redirect(url_for('candidates'))
         else:
             logger.warning(f"[AUTH] Login failed: bad password for user id={user['id']} (hash format: {pw_hash[:10] if pw_hash else 'empty'})")
@@ -608,6 +608,8 @@ def create_user():
     username = bleach.clean(request.form.get('username', '')).strip()
     email = bleach.clean(request.form.get('email', '')).strip()
     role = bleach.clean(request.form.get('role', 'client'))
+    help_needs = bleach.clean(request.form.get('help_needs', '')).strip()
+    software_usage = bleach.clean(request.form.get('software_usage', '')).strip()
     
     if not username or not email:
         return jsonify({"success": False, "message": "Username and Email are required"}), 400
@@ -635,24 +637,29 @@ def create_user():
     
     conn = get_db_connection()
     try:
-        existing = conn.execute(
-            "SELECT username, email FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)", 
-            (username, email)
+        # Check for duplicate username
+        existing_username = conn.execute(
+            "SELECT id FROM users WHERE LOWER(username) = LOWER(?)", 
+            (username,)
         ).fetchone()
         
-        if existing:
-            if existing['username'].lower() == username.lower():
-                return jsonify({"success": False, "message": "Username already exists"}), 400
+        if existing_username:
+            return jsonify({"success": False, "message": "Username already exists"}), 400
+            
+        # Check for duplicate email
+        existing_email = conn.execute(
+            "SELECT id FROM users WHERE LOWER(email) = LOWER(?)", 
+            (email,)
+        ).fetchone()
+        
+        if existing_email:
             return jsonify({"success": False, "message": "Email already in use"}), 400
 
-        conn.execute("INSERT INTO users (username, password, role, avatar_url, email) VALUES (?, ?, ?, ?, ?)",
-                    (username, password, role, avatar_url, email))
+        conn.execute("INSERT INTO users (username, password, role, avatar_url, email, help_needs, software_usage) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (username, password, role, avatar_url, email, help_needs, software_usage))
         conn.commit()
         log_action('CREATE_USER', username)
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
-            return jsonify({"success": True, "message": "User created successfully"})
-        return redirect(url_for('user_management'))
+        return jsonify({"success": True, "message": "User created successfully"})
     except Exception as e:
         logger.error(f"User creation error: {e}")
         return jsonify({"success": False, "message": "Internal server error"}), 500
@@ -663,7 +670,7 @@ def create_user():
 @require_role('admin')
 def get_user(id):
     conn = get_db_connection()
-    user = conn.execute("SELECT id, username, email, role, avatar_url FROM users WHERE id = ?", (id,)).fetchone()
+    user = conn.execute("SELECT id, username, email, role, avatar_url, help_needs, software_usage FROM users WHERE id = ?", (id,)).fetchone()
     conn.close()
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 404
@@ -676,20 +683,31 @@ def update_user_api(id):
     username = bleach.clean(data.get('username', '')).strip()
     email = bleach.clean(data.get('email', '')).strip()
     role = bleach.clean(data.get('role', 'client'))
+    help_needs = bleach.clean(data.get('help_needs', '')).strip()
+    software_usage = bleach.clean(data.get('software_usage', '')).strip()
     
     if not username or not email:
         return jsonify({"success": False, "message": "Username and Email are required"}), 400
         
     conn = get_db_connection()
     try:
-        # Check duplicates
-        existing = conn.execute(
-            "SELECT id, avatar_url FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?", 
-            (username, email, id)
+        # Check for duplicate username (excluding self)
+        existing_username = conn.execute(
+            "SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?", 
+            (username, id)
         ).fetchone()
         
-        if existing:
-            return jsonify({"success": False, "message": "Username or Email already in use"}), 400
+        if existing_username:
+            return jsonify({"success": False, "message": "Username already in use"}), 400
+            
+        # Check for duplicate email (excluding self)
+        existing_email = conn.execute(
+            "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?", 
+            (email, id)
+        ).fetchone()
+        
+        if existing_email:
+            return jsonify({"success": False, "message": "Email already in use"}), 400
 
         # Handle avatar upload
         avatar_url = request.form.get('current_avatar', '')
@@ -706,8 +724,8 @@ def update_user_api(id):
                 avatar_url = f"/static/uploads/avatars/{filename}"
 
         conn.execute(
-            "UPDATE users SET username = ?, email = ?, role = ?, avatar_url = ? WHERE id = ?",
-            (username, email, role, avatar_url, id)
+            "UPDATE users SET username = ?, email = ?, role = ?, avatar_url = ?, help_needs = ?, software_usage = ? WHERE id = ?",
+            (username, email, role, avatar_url, help_needs, software_usage, id)
         )
         conn.commit()
         log_action('UPDATE_USER', id)
@@ -738,6 +756,37 @@ def delete_user(id):
     except Exception as e:
         logger.error(f"User deletion error: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/api/users/<int:id>/logs')
+@require_role('admin')
+def get_user_logs(id):
+    conn = get_db_connection()
+    try:
+        # Verify user exists
+        user_row = conn.execute("SELECT id, username FROM users WHERE id = ?", (id,)).fetchone()
+        if not user_row:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        logs = conn.execute("""
+            SELECT al.id, al.action, al.resource_id, al.timestamp, al.ip_address,
+                   c.name as candidate_name
+            FROM audit_logs al
+            LEFT JOIN candidates c ON al.resource_id = c.id
+            WHERE al.user_id = ?
+            ORDER BY al.timestamp DESC
+            LIMIT 100
+        """, (id,)).fetchall()
+
+        return jsonify({
+            "success": True,
+            "username": user_row["username"],
+            "logs": [dict(l) for l in logs]
+        })
+    except Exception as e:
+        logger.error(f"Error fetching user logs: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/notifications')
 @require_role('admin', 'cs', 'client')
@@ -1079,6 +1128,86 @@ def update_meeting_status(meeting_id):
         logger.error(f"Update meeting status error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/candidates/reject', methods=['POST'])
+@require_role('client')
+def reject_candidate_api():
+    user = get_current_user()
+    data = request.json
+    candidate_id = data.get('candidate_id')
+    reason = data.get('reason')
+    
+    if not candidate_id or not reason:
+        return jsonify({'error': 'Candidate ID and reason are required'}), 400
+        
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO rejections (candidate_id, client_id, reason) VALUES (?, ?, ?)",
+            (candidate_id, user['id'], reason)
+        )
+        conn.commit()
+        conn.close()
+        
+        log_action('REJECT_CANDIDATE', candidate_id)
+        
+        # Notify admins and CS
+        conn = get_db_connection()
+        team_users = conn.execute("SELECT id FROM users WHERE role IN ('admin', 'cs')").fetchall()
+        candidate = conn.execute("SELECT name FROM candidates WHERE id = ?", (candidate_id,)).fetchone()
+        conn.close()
+        
+        for team_member in team_users:
+            create_notification(
+                team_member['id'], 
+                "Candidate Rejected", 
+                f"Client {user['username']} rejected {candidate['name']}. Reason: {reason}"
+            )
+            
+        return jsonify({'status': 'success', 'message': 'Rejection reason submitted successfully'})
+    except Exception as e:
+        logger.error(f"Rejection error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/candidates/feedback', methods=['POST'])
+@require_role('client')
+def submit_feedback_api():
+    user = get_current_user()
+    data = request.json
+    candidate_id = data.get('candidate_id')
+    feedback = data.get('feedback')
+    
+    if not candidate_id or not feedback:
+        return jsonify({'error': 'Candidate ID and feedback are required'}), 400
+        
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO feedbacks (candidate_id, client_id, feedback) VALUES (?, ?, ?)",
+            (candidate_id, user['id'], feedback)
+        )
+        conn.commit()
+        conn.close()
+        
+        log_action('SUBMIT_FEEDBACK', candidate_id)
+        
+        # Notify admins and CS
+        conn = get_db_connection()
+        team_users = conn.execute("SELECT id FROM users WHERE role IN ('admin', 'cs')").fetchall()
+        candidate = conn.execute("SELECT name FROM candidates WHERE id = ?", (candidate_id,)).fetchone()
+        conn.close()
+        
+        for team_member in team_users:
+            create_notification(
+                team_member['id'], 
+                "New Candidate Feedback", 
+                f"Client {user['username']} provided feedback for {candidate['name']}."
+            )
+            
+        return jsonify({'status': 'success', 'message': 'Feedback submitted successfully'})
+    except Exception as e:
+        logger.error(f"Feedback error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/candidate/<int:id>')
 @require_role('admin', 'cs', 'client')
 def candidate_profile(id):
@@ -1086,6 +1215,26 @@ def candidate_profile(id):
     
     conn = get_db_connection()
     candidate = conn.execute("SELECT * FROM candidates WHERE id = ?", (id,)).fetchone()
+    
+    rejections = []
+    feedbacks = []
+    if user['role'] in ['admin', 'cs']:
+        rejections = conn.execute("""
+            SELECT r.*, u.username as client_name 
+            FROM rejections r 
+            JOIN users u ON r.client_id = u.id 
+            WHERE r.candidate_id = ?
+            ORDER BY r.created_at DESC
+        """, (id,)).fetchall()
+        
+        feedbacks = conn.execute("""
+            SELECT f.*, u.username as client_name 
+            FROM feedbacks f 
+            JOIN users u ON f.client_id = u.id 
+            WHERE f.candidate_id = ?
+            ORDER BY f.created_at DESC
+        """, (id,)).fetchall()
+    
     conn.close()
     
     if not candidate:
@@ -1093,7 +1242,12 @@ def candidate_profile(id):
         
     is_client = user['role'] == 'client'
     log_action(f'VIEW_CANDIDATE_PROFILE', id)
-    return render_template('candidate_profile.html', candidate=candidate, user=user, is_client=is_client)
+    return render_template('candidate_profile.html', 
+                          candidate=candidate, 
+                          user=user, 
+                          is_client=is_client,
+                          rejections=rejections,
+                          feedbacks=feedbacks)
 
 @app.errorhandler(403)
 def forbidden(e):

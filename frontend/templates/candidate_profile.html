@@ -51,10 +51,20 @@
         <div style="display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; align-items: center;">
             {# Shared/Conditional Booking/Schedule Button #}
             {% if user.role == 'client' %}
-            <button onclick="requestMeeting({{ candidate.id }})" class="btn" id="requestBtn"
-                style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); cursor: pointer;">
-                <i data-lucide="calendar" style="width: 18px;"></i> Request Meeting
-            </button>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="requestMeeting({{ candidate.id }})" class="btn" id="requestBtn"
+                    style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); cursor: pointer;">
+                    <i data-lucide="calendar" style="width: 18px;"></i> Request Meeting
+                </button>
+                <button onclick="openFeedbackModal()" class="btn" id="feedbackBtn"
+                    style="background: #3b82f6; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); cursor: pointer;">
+                    <i data-lucide="message-square" style="width: 18px;"></i> Feedback
+                </button>
+                <button onclick="openRejectModal()" class="btn" id="rejectBtn"
+                    style="background: #ef4444; color: white; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); cursor: pointer;">
+                    <i data-lucide="x-circle" style="width: 18px;"></i> Reject
+                </button>
+            </div>
             {% else %}
             <a href="{{ url_for('meetings') }}" class="btn"
                 style="background: #afdaff; color: #1e293b; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; text-decoration: none;">
@@ -169,6 +179,85 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Rejection History Section -->
+    {% if rejections %}
+    <div class="card animate-in delay-2"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <i data-lucide="x-circle" style="width: 20px; color: #ef4444;"></i>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin: 0;">Rejection History</h3>
+            <span class="badge"
+                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.625rem; padding: 0.25rem 0.75rem;">Admin
+                View</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for rejection in rejections %}
+            <div
+                style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 12px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <span
+                            style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700;">Client
+                            name:</span>
+                        <span style="font-weight: 600; color: #afdaff; font-size: 0.9375rem;">{{ rejection.client_name |
+                            title }}</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #64748b;">{{ rejection.created_at | timesince }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                    <span
+                        style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700;">Reason
+                        of rejection:</span>
+                    <p style="color: #cbd5e1; font-size: 0.875rem; margin: 0; line-height: 1.5;">{{ rejection.reason }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Feedback History Section -->
+    {% if feedbacks %}
+    <div class="card animate-in delay-2"
+        style="background: #2b394f; border: 1px solid rgba(255,255,255,0.05); padding: 2rem; margin-bottom: 1.5rem; border-radius: 16px;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <i data-lucide="message-square" style="width: 20px; color: #3b82f6;"></i>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin: 0;">Client Feedback</h3>
+            <span class="badge"
+                style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; font-size: 0.625rem; padding: 0.25rem 0.75rem;">Admin
+                View</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for feedback in feedbacks %}
+            <div
+                style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 12px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                        <span
+                            style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700;">Client
+                            name:</span>
+                        <span style="font-weight: 600; color: #afdaff; font-size: 0.9375rem;">{{ feedback.client_name |
+                            title }}</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #64748b;">{{ feedback.created_at | timesince }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                    <span
+                        style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700;">Feedback:</span>
+                    <p style="color: #cbd5e1; font-size: 0.875rem; margin: 0; line-height: 1.5;">{{ feedback.feedback }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 
     <!-- About Section -->
@@ -244,6 +333,71 @@
     </div>
 </div>
 
+<!-- Rejection Modal -->
+<div id="rejectModal" class="modal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div
+        style="background: #1e293b; color: white; margin: 10% auto; padding: 2.5rem; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 500px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <h2
+            style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="alert-circle" style="color: #ef4444;"></i> Reject Candidate
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.9375rem; margin-bottom: 1.5rem;">Please provide a reason why you are
+            rejecting <strong>{{ candidate.name }}</strong>.</p>
+
+        <div style="margin-bottom: 2rem;">
+            <label for="rejectReason"
+                style="display: block; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.5rem;">Rejection
+                Reason</label>
+            <textarea id="rejectReason" rows="4"
+                style="width: 100%; padding: 0.75rem 1rem; border-radius: 10px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: inherit; resize: none;"
+                placeholder="Type your reason here..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button onclick="closeRejectModal()"
+                style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #94a3b8; cursor: pointer;">Cancel</button>
+            <button onclick="submitRejection({{ candidate.id }})" id="submitRejectBtn"
+                style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: none; background: #ef4444; color: white; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                Submit Reason
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div
+        style="background: #1e293b; color: white; margin: 10% auto; padding: 2.5rem; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 500px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <h2
+            style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="message-square" style="color: #3b82f6;"></i> Provide Feedback
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.9375rem; margin-bottom: 1.5rem;">Please share your feedback regarding
+            <strong>{{ candidate.name }}</strong>.
+        </p>
+
+        <div style="margin-bottom: 2rem;">
+            <label for="feedbackContent"
+                style="display: block; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.5rem;">Your
+                Feedback</label>
+            <textarea id="feedbackContent" rows="4"
+                style="width: 100%; padding: 0.75rem 1rem; border-radius: 10px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: inherit; resize: none;"
+                placeholder="Type your feedback here..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button onclick="closeFeedbackModal()"
+                style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #94a3b8; cursor: pointer;">Cancel</button>
+            <button onclick="submitFeedback({{ candidate.id }})" id="submitFeedbackBtn"
+                style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: none; background: #3b82f6; color: white; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                Submit Feedback
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Tag/Badge hover effects */
     .badge:hover,
@@ -274,6 +428,7 @@
 <script>
     function requestMeeting(candidateId) {
         const btn = document.getElementById('requestBtn');
+        if (!btn) return;
         const originalContent = btn.innerHTML;
 
         // Show loading state
@@ -297,6 +452,131 @@
                     btn.style.background = '#059669';
                 } else {
                     showToast(data.error || 'Failed to send request', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An unexpected error occurred', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            });
+    }
+
+    function openFeedbackModal() {
+        document.getElementById('feedbackModal').style.display = 'block';
+        document.getElementById('feedbackContent').value = '';
+        document.getElementById('feedbackContent').focus();
+    }
+
+    function closeFeedbackModal() {
+        document.getElementById('feedbackModal').style.display = 'none';
+    }
+
+    function submitFeedback(candidateId) {
+        const feedback = document.getElementById('feedbackContent').value.trim();
+        const btn = document.getElementById('submitFeedbackBtn');
+
+        if (!feedback) {
+            showToast('Please provide your feedback', 'error');
+            return;
+        }
+
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin" style="width: 18px;"></i> Submitting...';
+        lucide.createIcons();
+
+        fetch('/api/candidates/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                candidate_id: candidateId,
+                feedback: feedback
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Feedback submitted successfully', 'success');
+                    closeFeedbackModal();
+                    const feedbackBtn = document.getElementById('feedbackBtn');
+                    if (feedbackBtn) {
+                        feedbackBtn.innerHTML = '<i data-lucide="check" style="width: 18px;"></i> Feedback Sent';
+                        feedbackBtn.disabled = true;
+                        feedbackBtn.style.opacity = '0.7';
+                    }
+                } else {
+                    showToast(data.error || 'Failed to submit feedback', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An unexpected error occurred', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            });
+    }
+
+    function openRejectModal() {
+        document.getElementById('rejectModal').style.display = 'block';
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectReason').focus();
+    }
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').style.display = 'none';
+    }
+
+    function submitRejection(candidateId) {
+        const reason = document.getElementById('rejectReason').value.trim();
+        const btn = document.getElementById('submitRejectBtn');
+
+        if (!reason) {
+            showToast('Please provide a reason for rejection', 'error');
+            return;
+        }
+
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin" style="width: 18px;"></i> Submitting...';
+        lucide.createIcons();
+
+        fetch('/api/candidates/reject', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                candidate_id: candidateId,
+                reason: reason
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Rejection reason submitted', 'success');
+                    closeRejectModal();
+                    // Optionally update UI to show rejected state
+                    const rejectBtn = document.getElementById('rejectBtn');
+                    if (rejectBtn) {
+                        rejectBtn.innerHTML = '<i data-lucide="check" style="width: 18px;"></i> Rejected';
+                        rejectBtn.disabled = true;
+                        rejectBtn.style.opacity = '0.7';
+                    }
+                } else {
+                    showToast(data.error || 'Failed to submit rejection', 'error');
                     btn.disabled = false;
                     btn.innerHTML = originalContent;
                     lucide.createIcons();

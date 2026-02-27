@@ -2,7 +2,7 @@ import sqlite3
 import os
 from werkzeug.security import generate_password_hash
 
-DB_PATH = os.getenv("DATABASE_PATH", "platform.db")
+DB_PATH = os.getenv("DATABASE_PATH", os.path.join(os.path.dirname(__file__), "platform.db"))
 
 # Ensure the database path is writable, otherwise fallback to local directory
 # This affects the main process (Gunicorn) even if init_db was called separately
@@ -72,7 +72,9 @@ def init_db():
         password TEXT NOT NULL,
         role TEXT NOT NULL,
         avatar_url TEXT,
-        has_seen_welcome INTEGER DEFAULT 0
+        has_seen_welcome INTEGER DEFAULT 0,
+        help_needs TEXT,
+        software_usage TEXT
     )
     ''')
     
@@ -82,6 +84,8 @@ def init_db():
     add_column_safely(cursor, "users", "has_seen_welcome", "INTEGER DEFAULT 0")
     add_column_safely(cursor, "users", "department", "TEXT")
     add_column_safely(cursor, "users", "job_title", "TEXT")
+    add_column_safely(cursor, "users", "help_needs", "TEXT")
+    add_column_safely(cursor, "users", "software_usage", "TEXT")
     
     # Preferences Columns
     add_column_safely(cursor, "users", "notifications_email", "INTEGER DEFAULT 1")
@@ -225,6 +229,30 @@ def init_db():
         notes TEXT,
         FOREIGN KEY (client_id) REFERENCES users (id),
         FOREIGN KEY (candidate_id) REFERENCES candidates (id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS rejections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        candidate_id INTEGER NOT NULL,
+        client_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (candidate_id) REFERENCES candidates (id),
+        FOREIGN KEY (client_id) REFERENCES users (id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS feedbacks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        candidate_id INTEGER NOT NULL,
+        client_id INTEGER NOT NULL,
+        feedback TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (candidate_id) REFERENCES candidates (id),
+        FOREIGN KEY (client_id) REFERENCES users (id)
     )
     ''')
 
