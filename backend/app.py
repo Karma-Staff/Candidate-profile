@@ -69,7 +69,7 @@ csp = {
         '\'self\'',
         'https://fonts.gstatic.com'
     ],
-    'img-src': ['\'self\'', 'data:', '/static/uploads/']
+    'img-src': ['\'self\'', 'data:', 'https:', '/static/uploads/']
 }
 
 # Security Configuration for Talisman
@@ -1676,6 +1676,11 @@ def update_candidate(id):
             os.makedirs(upload_dir, exist_ok=True)
             logo_file.save(os.path.join(upload_dir, filename))
             company_logo_url = f"/static/uploads/avatars/{filename}"
+    # Fallback: use the pasted URL if no file was uploaded
+    if not company_logo_url or company_logo_url == candidate.get('company_logo_url'):
+        url_input = request.form.get('company_logo_url_input', '').strip()
+        if url_input:
+            company_logo_url = url_input
 
     try:
         conn.execute('''
@@ -1742,6 +1747,11 @@ def hire_candidate(id):
             os.makedirs(upload_dir, exist_ok=True)
             logo_file.save(os.path.join(upload_dir, filename))
             company_logo_url = f"/static/uploads/avatars/{filename}"
+    # Fallback: use the pasted URL if no file was uploaded
+    if not company_logo_url:
+        url_input = request.form.get('company_logo_url_input', '').strip()
+        if url_input:
+            company_logo_url = url_input
 
     try:
         conn = get_db_connection()

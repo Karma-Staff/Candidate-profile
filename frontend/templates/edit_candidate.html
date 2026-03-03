@@ -381,7 +381,16 @@
                                 accept="image/*" onchange="previewEditLogo(this)">
                             <div id="editLogoName" style="color: #afdaff; font-size: 0.7rem;"></div>
                         </div>
-                        <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem;">PNG, JPG, SVG or WebP</p>
+                        <!-- Or paste a URL (recommended for Render) -->
+                        <div style="margin-top:0.6rem; display:flex; align-items:center; gap:0.5rem;">
+                            <i data-lucide="link" style="width:14px; color:#64748b; flex-shrink:0;"></i>
+                            <input type="url" name="company_logo_url_input"
+                                placeholder="Or paste logo URL (recommended for live site)"
+                                value="{{ candidate.company_logo_url if candidate.company_logo_url and not candidate.company_logo_url.startswith('/static') else '' }}"
+                                style="flex:1; background:#1a273b; border:1px solid rgba(255,255,255,0.1); color:#e2e8f0; padding:0.5rem 0.75rem; border-radius:8px; font-size:0.8rem; outline:none;">
+                        </div>
+                        <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem;">PNG, JPG, SVG, WebP — or
+                            paste a URL for production.</p>
                     </div>
                 </div>
             </div>
