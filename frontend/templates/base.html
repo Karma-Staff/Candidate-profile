@@ -80,10 +80,15 @@
                 </div>
 
                 <div class="notifications-dropdown" id="notifContent">
-                    <div class="notifications-header">
-                        <h3>Notifications</h3>
-                        <button class="btn-ghost" onclick="markAllRead()"
-                            style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Mark all as read</button>
+                    <div class="notifications-header"
+                        style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h3 style="margin: 0;">Notifications</h3>
+                            <button class="btn-ghost" onclick="markAllRead()"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Mark all as read</button>
+                        </div>
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"
+                            style="height: 24px; width: 24px; object-fit: contain; background: white; border-radius: 6px; padding: 2px;">
                     </div>
                     <div id="notifList" style="max-height: 400px; overflow-y: auto;">
                         <div style="padding: 2rem; text-align: center; color: var(--text-light);">

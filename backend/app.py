@@ -13,6 +13,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_talisman import Talisman
 import resend
 import time
+import secrets
+import string
 
 load_dotenv()
 
@@ -249,7 +251,8 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                   <!-- Header -->
                   <tr>
-                    <td style="background: #0f172a; padding: 40px; text-align: center;">
+                    <td style="background: #1e293b; padding: 40px; text-align: center;">
+                      <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                       <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Welcome to Karma Staff</h1>
                       <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Talent Intelligence Platform</p>
                     </td>
@@ -262,7 +265,7 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
                         Your account has been created on the <strong>Karma Staff portal</strong>.
                         Find your secure login credentials below.
                       </p>
-                      
+
                       <!-- Credentials Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
                         <tr>
@@ -284,7 +287,7 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
                           <td align="center">
-                            <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; transition: background 0.2s;">Login to the Platform</a>
+                            <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; transition: background 0.2s;">Login to the Platform</a>
                           </td>
                         </tr>
                       </table>
@@ -317,6 +320,126 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
         logger.info(f"[EMAIL] Welcome email sent to {to_email} | id={response.get('id', 'n/a')}")
     except Exception as e:
         logger.error(f"[EMAIL] Failed to send welcome email to {to_email}: {e}")
+
+
+def send_forgot_password_email(to_email: str, username: str, temp_password: str, login_url: str):
+    """Send a temporary password to a user who forgot their credentials."""
+    from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
+    try:
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: #1e293b; padding: 40px; text-align: center;">
+                      <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Password Reset</h1>
+                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
+                    </td>
+                  </tr>
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 48px 40px;">
+                      <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{username}</strong>,</p>
+                      <p style="color: #475569; font-size: 16px; margin: 0 0 24px; line-height: 1.6;">
+                        We received a request to reset your password. We've generated a <strong>temporary password</strong> for you to access your account.
+                      </p>
+                      
+                      <!-- Temp Password Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
+                        <tr>
+                          <td style="padding: 24px 32px; text-align: center;">
+                            <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Temporary Password</p>
+                            <p style="margin: 0; color: #0f172a; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 24px; font-weight: 700; background: #e2e8f0; padding: 12px; border-radius: 8px; display: inline-block;">{temp_password}</p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="color: #ef4444; font-size: 14px; font-weight: 600; margin: 0 0 24px; text-align: center;">
+                        Important: Please change this password immediately from your "View Profile" page after logging in.
+                      </p>
+                      
+                      <!-- Action Button -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td align="center">
+                            <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Login to Portal</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
+                      <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        """
+        params = {
+            "from": from_email,
+            "to": [to_email],
+            "subject": "Karma Staff — Password Reset Request",
+            "html": html_body,
+        }
+        resend.Emails.send(params)
+        logger.info(f"[EMAIL] Forgot password email sent to {to_email}")
+    except Exception as e:
+        logger.error(f"[EMAIL] Failed to send forgot password email to {to_email}: {e}")
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        login_val = (request.form.get('login') or '').strip()
+        if not login_val:
+            flash('Please enter your email or username', 'error')
+            return render_template('forgot_password.html')
+
+        conn = get_db_connection()
+        # Support user lookup via username OR email
+        user = conn.execute(
+            'SELECT * FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)',
+            (login_val, login_val)
+        ).fetchone()
+
+        if not user:
+            # For security, we can use a generic message here if we don't want to leak usernames
+            flash('If an account matches that information, a reset email has been sent.', 'success')
+            conn.close()
+            return redirect(url_for('login'))
+
+        # Generate secure random password
+        alphabet = string.ascii_letters + string.digits
+        temp_password = ''.join(secrets.choice(alphabet) for i in range(10))
+        
+        # Hash and update in DB
+        hashed_pw = generate_password_hash(temp_password)
+        conn.execute('UPDATE users SET password = ? WHERE id = ?', (hashed_pw, user['id']))
+        conn.commit()
+        conn.close()
+
+        # Build full login URL for the email
+        login_url = request.host_url.rstrip('/') + url_for('login')
+        
+        # Send via Resend
+        send_forgot_password_email(user['email'], user['username'], temp_password, login_url)
+        
+        flash('A temporary password has been sent to your email.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
 
 
 def extract_text_from_pdf(pdf_path):
@@ -354,7 +477,7 @@ def health_check():
         conn.close()
     except Exception as e:
         status["db_connection"] = f"ERROR: {str(e)}"
-    
+
     # Test writability of current DB dir
     try:
         test_file = os.path.join(os.path.dirname(os.path.abspath(DB_PATH)), ".health_test")
@@ -386,13 +509,13 @@ def index():
 @require_role('admin', 'cs', 'client')
 def dashboard():
     user = get_current_user()
-    
+
     conn = get_db_connection()
-    
+
     # Filter logs based on role
     if user['role'] == 'client':
         logs_query = '''
-            SELECT al.*, u.username, c.name as candidate_name 
+            SELECT al.*, u.username, c.name as candidate_name
             FROM audit_logs al
             LEFT JOIN users u ON al.user_id = u.id
             LEFT JOIN candidates c ON al.resource_id = c.id
@@ -406,7 +529,7 @@ def dashboard():
         total_users = 0 # Not used for clients
     else:
         logs_query = '''
-            SELECT al.*, u.username, c.name as candidate_name 
+            SELECT al.*, u.username, c.name as candidate_name
             FROM audit_logs al
             LEFT JOIN users u ON al.user_id = u.id
             LEFT JOIN candidates c ON al.resource_id = c.id
@@ -417,13 +540,13 @@ def dashboard():
         total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs").fetchone()[0]
         total_candidates = conn.execute("SELECT COUNT(*) FROM candidates").fetchone()[0]
         total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-        
+
     conn.close()
-    
-    return render_template('dashboard.html', 
-                         user=user, 
-                         logs=logs, 
-                         total_logs=total_logs, 
+
+    return render_template('dashboard.html',
+                         user=user,
+                         logs=logs,
+                         total_logs=total_logs,
                          total_candidates=total_candidates,
                          total_users=total_users)
 
@@ -432,17 +555,17 @@ def dashboard():
 def meetings():
     user = get_current_user()
     conn = get_db_connection()
-    
+
     # Base query joining candidates and users
     query = """
-        SELECT m.*, 
+        SELECT m.*,
                c.name as candidate_name, c.role_type, c.avatar_url,
                u.username as client_name, u.email as client_email
         FROM meetings m
         JOIN candidates c ON m.candidate_id = c.id
         JOIN users u ON m.client_id = u.id
     """
-    
+
     if user['role'] == 'client':
         # Clients only see their own meeting requests
         query += " WHERE m.client_id = ? ORDER BY m.created_at DESC"
@@ -451,9 +574,9 @@ def meetings():
         # Admins and CS see all meeting requests
         query += " ORDER BY m.created_at DESC"
         meetings_list = conn.execute(query).fetchall()
-        
+
     conn.close()
-    
+
     return render_template('meetings.html', user=user, meetings=meetings_list)
 
 @app.route('/notifications')
@@ -468,11 +591,11 @@ def login():
         # Use request.form.get for safe access
         username_or_email = (request.form.get('username') or '').strip()
         password = request.form.get('password', '')
-        
+
         if not username_or_email or not password:
             flash('Please enter your username and password', 'error')
             return render_template('login.html')
-        
+
         conn = get_db_connection()
         # Support login via username OR email (case-insensitive)
         user = conn.execute(
@@ -480,16 +603,16 @@ def login():
             (username_or_email, username_or_email)
         ).fetchone()
         conn.close()
-        
+
         if not user:
             logger.warning(f"[AUTH] Login failed: user not found for '{username_or_email}'")
             flash('Invalid username or password', 'error')
             return render_template('login.html')
-        
+
         # Verify password — check_password_hash handles scrypt:, pbkdf2:, etc.
         pw_hash = user['password']
         is_hashed = pw_hash and (pw_hash.startswith('scrypt:') or pw_hash.startswith('pbkdf2:') or pw_hash.startswith('argon2'))
-        
+
         if is_hashed:
             login_ok = check_password_hash(pw_hash, password)
         else:
@@ -503,7 +626,7 @@ def login():
                 conn2.execute('UPDATE users SET password = ? WHERE id = ?', (new_hash, user['id']))
                 conn2.commit()
                 conn2.close()
-        
+
         if login_ok:
             session.clear()  # Prevent session fixation
             session['user_id'] = user['id']
@@ -517,7 +640,7 @@ def login():
         else:
             logger.warning(f"[AUTH] Login failed: bad password for user id={user['id']} (hash format: {pw_hash[:10] if pw_hash else 'empty'})")
             flash('Invalid username or password', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -530,12 +653,12 @@ def logout():
 def mark_welcome_seen():
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'}), 401
-    
+
     conn = get_db_connection()
     conn.execute("UPDATE users SET has_seen_welcome = 1 WHERE id = ?", (session['user_id'],))
     conn.commit()
     conn.close()
-    
+
     # Remove from session as well
     session.pop('show_welcome', None)
     return jsonify({'success': True})
@@ -544,35 +667,35 @@ def mark_welcome_seen():
 @require_role('admin', 'cs', 'client')
 def candidates():
     user = get_current_user()
-    
+
     search = request.args.get('search', '')
     experience = request.args.get('experience', '')
     availability = request.args.get('availability', '')
     location = request.args.get('location', '')
-    
+
     params = []
     if user['role'] == 'client':
         query = """
-            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id 
-            FROM candidates c 
-            JOIN assignments a ON c.id = a.candidate_id 
-            JOIN users u ON a.client_id = u.id 
+            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id
+            FROM candidates c
+            JOIN assignments a ON c.id = a.candidate_id
+            JOIN users u ON a.client_id = u.id
             WHERE a.client_id = ?
         """
         params.append(user['id'])
     else:
         query = """
-            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id 
-            FROM candidates c 
-            LEFT JOIN assignments a ON c.id = a.candidate_id 
-            LEFT JOIN users u ON a.client_id = u.id 
+            SELECT c.*, GROUP_CONCAT(u.username, ', ') as assigned_to_name, GROUP_CONCAT(u.id, ',') as assigned_to_id
+            FROM candidates c
+            LEFT JOIN assignments a ON c.id = a.candidate_id
+            LEFT JOIN users u ON a.client_id = u.id
             WHERE 1=1
         """
-    
+
     if search:
         query += " AND (c.name LIKE ? OR c.skills LIKE ? OR c.role_type LIKE ? OR c.professional_title LIKE ?)"
         params.extend([f'%{search}%', f'%{search}%', f'%{search}%', f'%{search}%'])
-    
+
     if experience and experience != 'All':
         val = int(experience.replace('+', '').replace(' Years', ''))
         query += " AND c.experience_years >= ?"
@@ -585,19 +708,19 @@ def candidates():
     if location and location != 'All':
         query += " AND c.location = ?"
         params.append(location)
-        
+
     query += " GROUP BY c.id ORDER BY c.sort_order ASC, c.name ASC"
-        
+
     conn = get_db_connection()
     candidate_list = conn.execute(query, params).fetchall()
-    
+
     # Get unique locations for the filter
     locations = [row[0] for row in conn.execute("SELECT DISTINCT location FROM candidates WHERE location IS NOT NULL AND location != '' AND location != 'Delhi, India'").fetchall()]
     conn.close()
-    
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify([dict(row) for row in candidate_list])
-    
+
     return render_template('candidates.html', candidates=candidate_list, user=user, locations=locations)
 
 @app.route('/add-candidate')
@@ -610,43 +733,43 @@ def add_candidate_page():
 @require_role('admin', 'cs')
 def create_candidate():
     user = get_current_user()
-    
+
     name = bleach.clean(request.form.get('name', ''))
     email = bleach.clean(request.form.get('email', ''))
     phone = bleach.clean(request.form.get('phone', ''))
     location = bleach.clean(request.form.get('location', ''))
     professional_title = bleach.clean(request.form.get('professional_title', ''))
-    
+
     try:
         experience_years = int(request.form.get('experience_years', 0))
     except (ValueError, TypeError):
         experience_years = 0
-        
+
     availability = bleach.clean(request.form.get('availability', ''))
     bio = bleach.clean(request.form.get('bio', ''))
     skills = bleach.clean(request.form.get('skills', ''))
     hobbies = bleach.clean(request.form.get('hobbies', ''))
-    
+
     if not name or not email:
         return {"error": "Name and email required"}, 400
 
     from werkzeug.utils import secure_filename
     import os
-    
+
     avatar_url = ''
     resume_url = ''
     video_url = ''
-    
+
     def save_file(file_key, folder):
         if file_key in request.files:
             file = request.files[file_key]
             if file and file.filename:
                 if not allowed_file(file.filename, folder):
                     return None
-                
+
                 # Ensure directory exists before saving
                 os.makedirs(os.path.join(app.static_folder, 'uploads', folder), exist_ok=True)
-                
+
                 # Use name to make filename somewhat unique but safe
                 clean_name = secure_filename(name.replace(' ', '_'))
                 filename = secure_filename(f"{clean_name}_{file.filename}")
@@ -658,7 +781,7 @@ def create_candidate():
     avatar_url = save_file('avatar', 'avatars')
     resume_url = save_file('resume', 'resumes')
     video_url = save_file('video', 'videos')
-    
+
     if avatar_url is None or resume_url is None or video_url is None:
         return {"error": "Invalid file type uploaded. Allowed: Images, PDFs, and common video formats."}, 400
 
@@ -679,11 +802,11 @@ def create_candidate():
 @require_role('admin')
 def user_management():
     user = get_current_user()
-    
+
     conn = get_db_connection()
     users = conn.execute("SELECT * FROM users").fetchall()
     conn.close()
-    
+
     return render_template('users.html', user=user, all_users=users)
 
 @app.route('/api/users/create', methods=['POST'])
@@ -694,48 +817,48 @@ def create_user():
     role = bleach.clean(request.form.get('role', 'client'))
     help_needs = bleach.clean(request.form.get('help_needs', '')).strip()
     software_usage = bleach.clean(request.form.get('software_usage', '')).strip()
-    
+
     if not username or not email:
         return jsonify({"success": False, "message": "Username and Email are required"}), 400
-        
+
     # Basic email validation
     import re
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_regex, email):
         return jsonify({"success": False, "message": "Invalid email format"}), 400
 
-    password = generate_password_hash('demo123') 
-    
+    password = generate_password_hash('demo123')
+
     avatar_url = None
     if 'avatar' in request.files:
         file = request.files['avatar']
         if file and file.filename:
             if not allowed_file(file.filename, 'avatars'):
                 return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
-            
+
             from werkzeug.utils import secure_filename
             filename = secure_filename(f"{username}_{file.filename}")
             upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
             file.save(upload_path)
             avatar_url = f"/static/uploads/avatars/{filename}"
-    
+
     conn = get_db_connection()
     try:
         # Check for duplicate username
         existing_username = conn.execute(
-            "SELECT id FROM users WHERE LOWER(username) = LOWER(?)", 
+            "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
             (username,)
         ).fetchone()
-        
+
         if existing_username:
             return jsonify({"success": False, "message": "Username already exists"}), 400
-            
+
         # Check for duplicate email
         existing_email = conn.execute(
-            "SELECT id FROM users WHERE LOWER(email) = LOWER(?)", 
+            "SELECT id FROM users WHERE LOWER(email) = LOWER(?)",
             (email,)
         ).fetchone()
-        
+
         if existing_email:
             return jsonify({"success": False, "message": "Email already in use"}), 400
 
@@ -775,27 +898,27 @@ def update_user_api(id):
     role = bleach.clean(data.get('role', 'client'))
     help_needs = bleach.clean(data.get('help_needs', '')).strip()
     software_usage = bleach.clean(data.get('software_usage', '')).strip()
-    
+
     if not username or not email:
         return jsonify({"success": False, "message": "Username and Email are required"}), 400
-        
+
     conn = get_db_connection()
     try:
         # Check for duplicate username (excluding self)
         existing_username = conn.execute(
-            "SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?", 
+            "SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?",
             (username, id)
         ).fetchone()
-        
+
         if existing_username:
             return jsonify({"success": False, "message": "Username already in use"}), 400
-            
+
         # Check for duplicate email (excluding self)
         existing_email = conn.execute(
-            "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?", 
+            "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?",
             (email, id)
         ).fetchone()
-        
+
         if existing_email:
             return jsonify({"success": False, "message": "Email already in use"}), 400
 
@@ -806,7 +929,7 @@ def update_user_api(id):
             if file and file.filename:
                 if not allowed_file(file.filename, 'avatars'):
                     return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
-                
+
                 from werkzeug.utils import secure_filename
                 filename = secure_filename(f"{username}_{file.filename}")
                 upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
@@ -832,7 +955,7 @@ def delete_user(id):
     current_user = get_current_user()
     if current_user['id'] == id:
         return jsonify({"success": False, "message": "You cannot delete your own account"}), 400
-        
+
     try:
         conn = get_db_connection()
         # Delete related records to satisfy foreign key constraints
@@ -842,13 +965,13 @@ def delete_user(id):
         conn.execute("DELETE FROM meetings WHERE client_id = ?", (id,))
         conn.execute("DELETE FROM rejections WHERE client_id = ?", (id,))
         conn.execute("DELETE FROM feedbacks WHERE client_id = ?", (id,))
-        
+
         # Finally, delete the user
         conn.execute("DELETE FROM users WHERE id = ?", (id,))
         conn.commit()
         conn.close()
         log_action('DELETE_USER', id)
-        
+
         if request.method == 'DELETE' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({"success": True, "message": "User deleted successfully"})
         return redirect(url_for('user_management'))
@@ -891,32 +1014,32 @@ def get_user_logs(id):
 @require_role('admin', 'cs', 'client')
 def get_notifications():
     user = get_current_user()
-        
+
     conn = get_db_connection()
     # Get last 10 notifications for the user
     notifications = conn.execute("""
-        SELECT *, 
+        SELECT *,
                strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as timestamp_iso
-        FROM notifications 
-        WHERE user_id = ? 
-        ORDER BY created_at DESC 
+        FROM notifications
+        WHERE user_id = ?
+        ORDER BY created_at DESC
         LIMIT 10
     """, (user['id'],)).fetchall()
     conn.close()
-    
+
     from datetime import datetime, timezone
-    
+
     def format_time_ago(dt):
         now = datetime.now(timezone.utc)
         # Handle case where created_at might not have TZ info if it's from current_timestamp
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-            
+
         diff = now - dt
-        
+
         seconds = diff.total_seconds()
         if seconds < 0: seconds = 0 # Handle slight clock drifts
-        
+
         if seconds < 60:
             return "Just now"
         elif seconds < 3600:
@@ -941,14 +1064,14 @@ def get_notifications():
         except:
             d['time_ago'] = 'Recently'
         result.append(d)
-        
+
     return {"notifications": result}
 
 @app.route('/api/notifications/mark-all-read', methods=['POST'])
 @require_role('admin', 'cs', 'client')
 def mark_notifications_read():
     user = get_current_user()
-    
+
     conn = get_db_connection()
     conn.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ?", (user['id'],))
     conn.commit()
@@ -959,7 +1082,7 @@ def mark_notifications_read():
 @require_role('admin', 'cs', 'client')
 def delete_notification(id):
     user = get_current_user()
-    
+
     conn = get_db_connection()
     conn.execute("DELETE FROM notifications WHERE id = ? AND user_id = ?", (id, user['id']))
     conn.commit()
@@ -970,7 +1093,7 @@ def delete_notification(id):
 @require_role('admin', 'cs', 'client')
 def mark_notification_read(id):
     user = get_current_user()
-    
+
     conn = get_db_connection()
     conn.execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", (id, user['id']))
     conn.commit()
@@ -981,13 +1104,13 @@ def mark_notification_read(id):
 @require_role('admin', 'cs')
 def assign_candidates():
     user = get_current_user()
-    
+
     conn = get_db_connection()
     clients = conn.execute("SELECT * FROM users WHERE role = 'client' ORDER BY username ASC").fetchall()
-    
+
     # Query to get candidates along with their current assigned client (if any)
     candidates_query = '''
-        SELECT c.*, 
+        SELECT c.*,
                GROUP_CONCAT(u.username, ', ') as assigned_to_name,
                GROUP_CONCAT(u.id, ',') as assigned_to_id
         FROM candidates c
@@ -999,14 +1122,14 @@ def assign_candidates():
     '''
     candidates = conn.execute(candidates_query).fetchall()
     conn.close()
-    
+
     return render_template('assign.html', user=user, clients=clients, candidates=candidates)
 
 @app.route('/api/assignments/<int:client_id>')
 @require_role('admin', 'cs')
 def get_assignments(client_id):
     user = get_current_user()
-        
+
     conn = get_db_connection()
     assigned = conn.execute('''
         SELECT c.* FROM candidates c
@@ -1015,50 +1138,50 @@ def get_assignments(client_id):
         ORDER BY a.sort_order ASC
     ''', (client_id,)).fetchall()
     conn.close()
-    
+
     return jsonify([dict(row) for row in assigned])
 
 @app.route('/api/assignments/summary')
 @require_role('admin', 'cs')
 def get_assignments_summary():
     user = get_current_user()
-    
+
     conn = get_db_connection()
     # Get all clients
     clients = conn.execute("SELECT id, username, email FROM users WHERE role = 'client'").fetchall()
     # Get all assignments
     assignments = conn.execute('''
-        SELECT a.client_id, c.* 
+        SELECT a.client_id, c.*
         FROM assignments a
         JOIN candidates c ON a.candidate_id = c.id
         ORDER BY a.sort_order ASC
     ''').fetchall()
     conn.close()
-    
+
     # Map assignments to clients
     summary = []
     for client in clients:
         client_data = dict(client)
         client_data['candidates'] = [dict(a) for a in assignments if a['client_id'] == client['id']]
         summary.append(client_data)
-        
+
     return jsonify(summary)
 
 @app.route('/api/assignments/save', methods=['POST'])
 @require_role('admin', 'cs')
 def save_assignments():
     user = get_current_user()
-        
+
     data = request.json
     client_id = data.get('client_id')
     candidate_ids = data.get('candidate_ids', [])
-    
+
     if not client_id:
         return jsonify({'error': 'Client ID required'}), 400
-        
+
     try:
         conn = get_db_connection()
-        
+
         # Get client's email and username
         client_info = conn.execute("SELECT username, email FROM users WHERE id = ?", (client_id,)).fetchone()
         client_name = client_info['username'] if client_info and client_info['username'] else 'Client'
@@ -1066,14 +1189,14 @@ def save_assignments():
 
         # Ensure candidate_ids are integers for reliable comparison
         candidate_ids = [int(cid) for cid in candidate_ids if cid]
-        
+
         # 1. Get existing candidate IDs to find what's "new"
         existing_ids_rows = conn.execute("SELECT candidate_id FROM assignments WHERE client_id = ?", (client_id,)).fetchall()
         existing_ids = {int(row['candidate_id']) for row in existing_ids_rows}
-        
+
         # 2. Identify newly assigned IDs (only those not already in the list)
         new_ids = [cid for cid in candidate_ids if cid not in existing_ids]
-        
+
         candidate_names = []
         if new_ids:
             placeholders = ', '.join(['?'] * len(new_ids))
@@ -1082,20 +1205,20 @@ def save_assignments():
 
         # Clear existing assignments for this specific client
         conn.execute("DELETE FROM assignments WHERE client_id = ?", (client_id,))
-        
+
         # Add new assignments
         for index, cand_id in enumerate(candidate_ids):
             # Insert the new assignment
-            conn.execute("INSERT INTO assignments (client_id, candidate_id, sort_order) VALUES (?, ?, ?)", 
+            conn.execute("INSERT INTO assignments (client_id, candidate_id, sort_order) VALUES (?, ?, ?)",
                          (client_id, cand_id, index))
         conn.commit()
         conn.close()
-        
+
         # Create a targeted notification for EACH truly new candidate individually
         for name in candidate_names:
             msg = f"Admin has assigned a new candidate to your portal: {name}"
             create_notification(client_id, "New Candidate Assigned", msg, "info")
-            
+
             # Send email to the client using Resend
             if client_email:
                 try:
@@ -1103,7 +1226,7 @@ def save_assignments():
                     resend.api_key = os.getenv('RESEND_API_KEY')
                     from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
                     login_url = request.host_url.rstrip('/') + url_for('login')
-                    
+
                     html_body = f"""
                     <!DOCTYPE html>
                     <html>
@@ -1114,7 +1237,8 @@ def save_assignments():
                             <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                               <!-- Header -->
                               <tr>
-                                <td style="background: #0f172a; padding: 40px; text-align: center;">
+                                <td style="background: #1e293b; padding: 40px; text-align: center;">
+                                  <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                                   <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">New Candidate Assigned</h1>
                                   <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
                                 </td>
@@ -1124,15 +1248,15 @@ def save_assignments():
                                 <td style="padding: 48px 40px;">
                                   <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{client_name}</strong>,</p>
                                   <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
-                                    Admin has assigned a new candidate, <strong style="color: #0f172a;">{name}</strong>, to your portal. 
+                                    Admin has assigned a new candidate, <strong style="color: #0f172a;">{name}</strong>, to your portal.
                                     You can now view their full profile, technical grades, and introduction videos.
                                   </p>
-                                  
+
                                   <!-- Action Button -->
                                   <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                                     <tr>
                                       <td align="center">
-                                        <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Profile in Portal</a>
+                                        <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Profile in Portal</a>
                                       </td>
                                     </tr>
                                   </table>
@@ -1237,7 +1361,8 @@ def request_meeting_api():
                         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                           <!-- Header -->
                           <tr>
-                            <td style="background: #0f172a; padding: 40px; text-align: center;">
+                            <td style="background: #1e293b; padding: 40px; text-align: center;">
+                              <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                               <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;"><span style="color: #ef4444;">Urgent !!</span> Candidate Desired</h1>
                               <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Meeting Request • Karma Staff</p>
                             </td>
@@ -1271,7 +1396,7 @@ def request_meeting_api():
                               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                                 <tr>
                                   <td align="center">
-                                    <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Manage Meeting Request</a>
+                                    <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Manage Meeting Request</a>
                                   </td>
                                 </tr>
                               </table>
@@ -1383,7 +1508,8 @@ def update_meeting_status(meeting_id):
                         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                           <!-- Header -->
                           <tr>
-                            <td style="background: #0f172a; padding: 40px; text-align: center;">
+                            <td style="background: #1e293b; padding: 40px; text-align: center;">
+                              <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                               <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Meeting Update</h1>
                               <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
                             </td>
@@ -1412,7 +1538,7 @@ def update_meeting_status(meeting_id):
                               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                                 <tr>
                                   <td align="center">
-                                    <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Details in Portal</a>
+                                    <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Details in Portal</a>
                                   </td>
                                 </tr>
                               </table>
@@ -1612,6 +1738,7 @@ def update_profile():
     full_name = bleach.clean(data.get('full_name', '')).strip()
     email = bleach.clean(data.get('email', '')).strip()
     department = bleach.clean(data.get('department', '')).strip()
+    company_name = bleach.clean(data.get('company_name', '')).strip()
     job_title = bleach.clean(data.get('job_title', '')).strip()
     
     if not full_name or not email:
@@ -1669,9 +1796,9 @@ def update_profile():
         # 4. Perform Update
         conn.execute("""
             UPDATE users 
-            SET username = ?, email = ?, department = ?, job_title = ?, avatar_url = ?
+            SET username = ?, email = ?, department = ?, company_name = ?, job_title = ?, avatar_url = ?
             WHERE id = ?
-        """, (full_name, email, department, job_title, avatar_url, user['id']))
+        """, (full_name, email, department, company_name, job_title, avatar_url, user['id']))
         conn.commit()
         logger.info(f"Profile updated successfully for User ID {user['id']}")
         

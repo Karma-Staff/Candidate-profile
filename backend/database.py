@@ -83,6 +83,7 @@ def init_db():
     add_column_safely(cursor, "users", "avatar_url", "TEXT")
     add_column_safely(cursor, "users", "has_seen_welcome", "INTEGER DEFAULT 0")
     add_column_safely(cursor, "users", "department", "TEXT")
+    add_column_safely(cursor, "users", "company_name", "TEXT")
     add_column_safely(cursor, "users", "job_title", "TEXT")
     add_column_safely(cursor, "users", "help_needs", "TEXT")
     add_column_safely(cursor, "users", "software_usage", "TEXT")

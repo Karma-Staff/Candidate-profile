@@ -97,15 +97,6 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Department</label>
-                    <div style="position: relative;">
-                        <i data-lucide="building"
-                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
-                        <input type="text" id="department" class="search-input" style="padding-left: 2.5rem;"
-                            placeholder="e.g. Operations" value="{{ user.department or '' }}">
-                    </div>
-                </div>
-                <div class="form-group">
                     <label class="form-label">Email Address</label>
                     <div style="position: relative;">
                         <i data-lucide="mail"
@@ -121,6 +112,15 @@
                             style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
                         <input type="text" id="job_title" class="search-input" style="padding-left: 2.5rem;"
                             placeholder="e.g. Manager" value="{{ user.job_title or '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <div style="position: relative;">
+                        <i data-lucide="building"
+                            style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter);"></i>
+                        <input type="text" id="company_name" class="search-input" style="padding-left: 2.5rem;"
+                            placeholder="e.g. Karma Staff" value="{{ user.company_name or '' }}">
                     </div>
                 </div>
             </div>
@@ -211,8 +211,8 @@
                     const formData = new FormData();
                     formData.append('full_name', document.getElementById('full_name').value);
                     formData.append('email', document.getElementById('email').value);
-                    formData.append('department', document.getElementById('department').value);
                     formData.append('job_title', document.getElementById('job_title').value);
+                    formData.append('company_name', document.getElementById('company_name').value);
 
                     if (avatarInput.files[0]) {
                         formData.append('avatar', avatarInput.files[0]);
@@ -252,7 +252,7 @@
         </div>
 
         <!-- Quick Access -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;" class="animate-in delay-3">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;" class="animate-in delay-3">
             <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;"
                 onclick="openModal('modal-security')">
                 <div
@@ -270,15 +270,6 @@
                 </div>
                 <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Notifications</div>
                 <div style="font-size: 0.75rem; color: var(--text-lighter);">Email, Desktop, Mobile</div>
-            </div>
-            <div class="card card-hover" style="text-align: center; padding: 1.5rem; cursor: pointer;"
-                onclick="openModal('modal-privacy')">
-                <div
-                    style="width: 40px; height: 40px; background: var(--warning-subtle); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
-                    <i data-lucide="lock" style="width: 20px; color: var(--warning);"></i>
-                </div>
-                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">Privacy</div>
-                <div style="font-size: 0.75rem; color: var(--text-lighter);">Data export, Visibility</div>
             </div>
         </div>
 
@@ -456,46 +447,6 @@
     </div>
 </div>
 
-<!-- Privacy Modal -->
-<div id="modal-privacy" class="pref-modal-overlay" onclick="if(event.target===this) closeModal('modal-privacy')">
-    <div class="pref-modal">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Privacy Settings</h3>
-            <button class="btn-ghost" onclick="closeModal('modal-privacy')"
-                style="background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 0.5rem; border-radius: 8px;">
-                <i data-lucide="x" style="width: 24px;"></i>
-            </button>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem;">
-            <div class="form-group">
-                <label class="form-label">Profile Visibility</label>
-                <select id="pref-visibility" class="search-input"
-                    style="width: 100%; box-sizing: border-box; padding: 0.75rem;">
-                    <option value="Public" {% if user.privacy_profile_visibility=='Public' %}selected{% endif %}>Public
-                        (Everyone)</option>
-                    <option value="Internal" {% if user.privacy_profile_visibility=='Internal' %}selected{% endif %}>
-                        Internal Only (Team)</option>
-                    <option value="Private" {% if user.privacy_profile_visibility=='Private' %}selected{% endif %}>
-                        Private (Only Me)</option>
-                </select>
-                <div style="font-size: 0.75rem; color: var(--text-lighter); margin-top: 0.5rem;">Control who can see
-                    your contact info internally.</div>
-            </div>
-            <div
-                style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius);">
-                <div style="font-weight: 600; color: #ef4444; margin-bottom: 0.25rem;">Export Data</div>
-                <div style="font-size: 0.75rem; color: var(--text-lighter); margin-bottom: 0.75rem;">Download a copy of
-                    your personal data.</div>
-                <button class="btn btn-outline" style="font-size: 0.75rem; color: white;"
-                    onclick="showToast('Your data export is being generated. You will receive an email shortly.', 'info')">Request
-                    Export</button>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: flex-end;">
-            <button class="btn btn-primary" onclick="savePreferences()" id="btn-save-priv">Save Preferences</button>
-        </div>
-    </div>
-</div>
 
 <script>
     // Ensure icons are initialized on the profile page
