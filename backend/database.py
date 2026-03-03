@@ -162,6 +162,17 @@ def init_db():
     add_column_safely(cursor, "candidates", "company_name", "TEXT")
     add_column_safely(cursor, "candidates", "company_logo_url", "TEXT")
 
+    # Fix any company_logo_url that points to a local /static/ path (not accessible on Render)
+    # Replace with a known external URL so logos still display on the live site.
+    PUROCLEAN_LOGO = "https://www.puroclean.com/wp-content/uploads/2017/06/PuroClean-Logo.png"
+    cursor.execute("""
+        UPDATE candidates
+        SET company_logo_url = ?
+        WHERE company_logo_url LIKE '/static/%'
+    """, (PUROCLEAN_LOGO,))
+    if cursor.rowcount > 0:
+        print(f"Fixed {cursor.rowcount} candidate(s) with local company logo paths -> external URL")
+
     # Initialize sort_order for existing candidates if it's 0
     cursor.execute("UPDATE candidates SET sort_order = id WHERE sort_order = 0")
 
