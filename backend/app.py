@@ -1650,12 +1650,13 @@ def update_candidate(id):
         if file_key in request.files:
             file = request.files[file_key]
             if file and file.filename:
-                # Ensure directory exists before saving
-                os.makedirs(os.path.join(app.static_folder, 'uploads', folder), exist_ok=True)
+                # Use UPLOAD_BASE for persistent storage on Render
+                upload_dir = os.path.join(UPLOAD_BASE, folder)
+                os.makedirs(upload_dir, exist_ok=True)
                 
                 clean_name = secure_filename(name.replace(' ', '_'))
                 filename = secure_filename(f"{clean_name}_{file.filename}")
-                path = os.path.join(UPLOAD_BASE, folder, filename)
+                path = os.path.join(upload_dir, filename)
                 file.save(path)
                 return f"/static/uploads/{folder}/{filename}"
         return current_url
@@ -1672,7 +1673,8 @@ def update_candidate(id):
         ext = os.path.splitext(logo_file.filename)[1].lower()
         if ext in {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}:
             filename = f"company_{id}_{int(__import__('time').time())}{ext}"
-            upload_dir = os.path.join(app.static_folder, 'uploads', 'avatars')
+            # Use UPLOAD_BASE for persistent storage on Render
+            upload_dir = os.path.join(UPLOAD_BASE, 'avatars')
             os.makedirs(upload_dir, exist_ok=True)
             logo_file.save(os.path.join(upload_dir, filename))
             company_logo_url = f"/static/uploads/avatars/{filename}"
@@ -1743,7 +1745,8 @@ def hire_candidate(id):
         allowed = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}
         if ext in allowed:
             filename = f"company_{id}_{int(__import__('time').time())}{ext}"
-            upload_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'uploads', 'avatars')
+            # Use UPLOAD_BASE for persistent storage on Render
+            upload_dir = os.path.join(UPLOAD_BASE, 'avatars')
             os.makedirs(upload_dir, exist_ok=True)
             logo_file.save(os.path.join(upload_dir, filename))
             company_logo_url = f"/static/uploads/avatars/{filename}"
