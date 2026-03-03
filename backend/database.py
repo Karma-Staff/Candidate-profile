@@ -159,6 +159,8 @@ def init_db():
     add_column_safely(cursor, "candidates", "video_url", "TEXT")
     add_column_safely(cursor, "candidates", "sort_order", "INTEGER DEFAULT 0")
     add_column_safely(cursor, "candidates", "professionalism_grade", "REAL DEFAULT 0.0")
+    add_column_safely(cursor, "candidates", "company_name", "TEXT")
+    add_column_safely(cursor, "candidates", "company_logo_url", "TEXT")
 
     # Initialize sort_order for existing candidates if it's 0
     cursor.execute("UPDATE candidates SET sort_order = id WHERE sort_order = 0")

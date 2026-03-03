@@ -67,24 +67,30 @@
 
                     <td style="padding: 1rem 1.5rem;">
                         {% if user.role != 'client' %}
-                        <!-- Admin/CS: Interactive status dropdown -->
-                        <select id="status-{{ meeting.id }}"
-                            onchange="updateMeetingStatus({{ meeting.id }}, this.value)"
-                            style="background: var(--surface-hover); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; outline: none; appearance: auto;">
-                            <option value="Pending" {% if meeting.status=='Pending' %}selected{% endif %}
-                                style="background: #1e293b;">⏳ Pending</option>
-                            <option value="Accepted" {% if meeting.status=='Accepted' %}selected{% endif %}
-                                style="background: #1e293b;">✅ Accepted</option>
-                            <option value="Scheduled" {% if meeting.status=='Scheduled' %}selected{% endif %}
-                                style="background: #1e293b;">📅 Scheduled</option>
-                            <option value="Completed" {% if meeting.status=='Completed' %}selected{% endif %}
-                                style="background: #1e293b;">🎉 Completed</option>
-                            <option value="Cancelled" {% if meeting.status=='Cancelled' %}selected{% endif %}
-                                style="background: #1e293b;">❌ Cancelled</option>
-                        </select>
-                        <span id="save-indicator-{{ meeting.id }}"
-                            style="display: none; color: #22c55e; font-size: 0.75rem; margin-left: 0.5rem;">✓
-                            Saved</span>
+                        <!-- Admin/CS: Interactive status dropdown + Save button -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <select id="status-{{ meeting.id }}" onchange="showSaveBtn({{ meeting.id }})"
+                                style="background: var(--surface-hover); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; outline: none; appearance: auto;">
+                                <option value="Pending" {% if meeting.status=='Pending' %}selected{% endif %}
+                                    style="background: #1e293b;">⏳ Pending</option>
+                                <option value="Accepted" {% if meeting.status=='Accepted' %}selected{% endif %}
+                                    style="background: #1e293b;">✅ Accepted</option>
+                                <option value="Scheduled" {% if meeting.status=='Scheduled' %}selected{% endif %}
+                                    style="background: #1e293b;">📅 Scheduled</option>
+                                <option value="Completed" {% if meeting.status=='Completed' %}selected{% endif %}
+                                    style="background: #1e293b;">🎉 Completed</option>
+                                <option value="Cancelled" {% if meeting.status=='Cancelled' %}selected{% endif %}
+                                    style="background: #1e293b;">❌ Cancelled</option>
+                            </select>
+                            <button id="save-btn-{{ meeting.id }}" onclick="saveMeetingStatus({{ meeting.id }})"
+                                style="display: none; background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0.4rem 0.875rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                                onmouseover="this.style.background='#2563eb'"
+                                onmouseout="this.style.background='#3b82f6'">
+                                Save
+                            </button>
+                            <span id="save-indicator-{{ meeting.id }}"
+                                style="display: none; color: #22c55e; font-size: 0.75rem;">✓ Saved</span>
+                        </div>
                         {% else %}
                         <!-- Client: Static badge -->
                         {% set badge_styles = {
@@ -134,12 +140,25 @@
 
 {% if user.role != 'client' %}
 <script>
+    function showSaveBtn(meetingId) {
+        document.getElementById('save-btn-' + meetingId).style.display = 'inline-block';
+        document.getElementById('save-indicator-' + meetingId).style.display = 'none';
+    }
+
+    async function saveMeetingStatus(meetingId) {
+        const newStatus = document.getElementById('status-' + meetingId).value;
+        await updateMeetingStatus(meetingId, newStatus);
+    }
+
     async function updateMeetingStatus(meetingId, newStatus) {
         const indicator = document.getElementById('save-indicator-' + meetingId);
         const dropdown = document.getElementById('status-' + meetingId);
+        const saveBtn = document.getElementById('save-btn-' + meetingId);
 
         try {
             dropdown.disabled = true;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving…';
             const response = await fetch('/api/meetings/status/' + meetingId, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,24 +168,26 @@
             const data = await response.json();
 
             if (response.ok) {
-                // Show saved indicator
+                saveBtn.style.display = 'none';
                 indicator.style.display = 'inline';
-                setTimeout(() => { indicator.style.display = 'none'; }, 2000);
-
+                setTimeout(() => { indicator.style.display = 'none'; }, 2500);
                 if (typeof showToast === 'function') {
                     showToast('Status updated to ' + newStatus, 'success');
                 }
             } else {
+                saveBtn.textContent = 'Save';
                 if (typeof showToast === 'function') {
                     showToast(data.error || 'Failed to update status', 'error');
                 }
             }
         } catch (err) {
+            saveBtn.textContent = 'Save';
             if (typeof showToast === 'function') {
                 showToast('Network error. Please try again.', 'error');
             }
         } finally {
             dropdown.disabled = false;
+            saveBtn.disabled = false;
         }
     }
 </script>

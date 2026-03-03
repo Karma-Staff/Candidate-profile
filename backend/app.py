@@ -235,6 +235,87 @@ def create_notification(user_id, title, message, notif_type='info'):
     except Exception as e:
         logger.error(f"Failed to create notification for User {user_id}: {e}")
 
+def send_welcome_email(to_email: str, username: str, plain_password: str, login_url: str):
+    """Send a welcome / credential email to a newly created user via Resend."""
+    from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
+    try:
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background: #f4f6f8; padding: 40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 32px 40px; text-align: center;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Welcome to Karma Staff</h1>
+                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Candidate Profile Platform</p>
+                    </td>
+                  </tr>
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <p style="color: #334155; font-size: 16px; margin: 0 0 24px;">Hi <strong>{username}</strong>,</p>
+                      <p style="color: #475569; font-size: 15px; margin: 0 0 24px; line-height: 1.6;">
+                        Your account has been created on the <strong>Karma Staff Candidate Profile Application</strong>.
+                        Below are your login credentials &mdash; please keep them safe.
+                      </p>
+                      <!-- Credentials Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
+                        <tr>
+                          <td style="padding: 24px 28px;">
+                            <p style="margin: 0 0 12px; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Your Credentials</p>
+                            <p style="margin: 0 0 8px; color: #1e293b; font-size: 15px;">
+                              <span style="display: inline-block; width: 90px; color: #64748b; font-weight: 600;">Username:</span>
+                              <strong style="color: #0f172a;">{username}</strong>
+                            </p>
+                            <p style="margin: 0; color: #1e293b; font-size: 15px;">
+                              <span style="display: inline-block; width: 90px; color: #64748b; font-weight: 600;">Password:</span>
+                              <strong style="color: #0f172a; font-family: monospace; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">{plain_password}</strong>
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                      <!-- Login Button -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                        <tr>
+                          <td align="center">
+                            <a href="{login_url}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em;">Login to the Platform</a>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="color: #64748b; font-size: 13px; line-height: 1.6; margin: 0;">
+                        If you did not expect this email, please contact your administrator.
+                      </p>
+                    </td>
+                  </tr>
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafc; padding: 20px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
+                      <p style="color: #94a3b8; font-size: 12px; margin: 0;">&copy; 2025 Karma Staff &bull; Candidate Profile Platform</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        """
+        params = {
+            "from": from_email,
+            "to": [to_email],
+            "subject": "Your Karma Staff Account Has Been Created",
+            "html": html_body,
+        }
+        response = resend.Emails.send(params)
+        logger.info(f"[EMAIL] Welcome email sent to {to_email} | id={response.get('id', 'n/a')}")
+    except Exception as e:
+        logger.error(f"[EMAIL] Failed to send welcome email to {to_email}: {e}")
+
+
 def extract_text_from_pdf(pdf_path):
     """Extracts text from a PDF file using PyPDF2."""
     if not pdf_path or not os.path.exists(pdf_path):
@@ -659,6 +740,12 @@ def create_user():
                     (username, password, role, avatar_url, email, help_needs, software_usage))
         conn.commit()
         log_action('CREATE_USER', username)
+
+        # Send welcome / credential email to the new user
+        plain_password = 'demo123'
+        login_url = request.host_url.rstrip('/') + url_for('login')
+        send_welcome_email(email, username, plain_password, login_url)
+
         return jsonify({"success": True, "message": "User created successfully"})
     except Exception as e:
         logger.error(f"User creation error: {e}")
@@ -1577,14 +1664,27 @@ def update_candidate(id):
     resume_url = update_file('resume', 'resumes', resume_url)
     video_url = update_file('video', 'videos', video_url)
 
+    # Company info (for hired candidates)
+    company_name = bleach.clean(request.form.get('company_name', '')) or candidate.get('company_name')
+    company_logo_url = candidate.get('company_logo_url')
+    logo_file = request.files.get('company_logo')
+    if logo_file and logo_file.filename:
+        ext = os.path.splitext(logo_file.filename)[1].lower()
+        if ext in {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}:
+            filename = f"company_{id}_{int(__import__('time').time())}{ext}"
+            upload_dir = os.path.join(app.static_folder, 'uploads', 'avatars')
+            os.makedirs(upload_dir, exist_ok=True)
+            logo_file.save(os.path.join(upload_dir, filename))
+            company_logo_url = f"/static/uploads/avatars/{filename}"
+
     try:
         conn.execute('''
             UPDATE candidates SET 
                 name=?, email=?, phone=?, location=?, professional_title=?, 
                 experience_years=?, availability=?, bio=?, skills=?, hobbies=?, 
-                avatar_url=?, resume_url=?, video_url=?
+                avatar_url=?, resume_url=?, video_url=?, company_name=?, company_logo_url=?
             WHERE id=?
-        ''', (name, email, phone, location, professional_title, experience_years, availability, bio, skills, hobbies, avatar_url, resume_url, video_url, id))
+        ''', (name, email, phone, location, professional_title, experience_years, availability, bio, skills, hobbies, avatar_url, resume_url, video_url, company_name or None, company_logo_url, id))
         conn.commit()
         conn.close()
         log_action('UPDATE_CANDIDATE', id)
@@ -1629,11 +1729,32 @@ def delete_candidate(id):
 @app.route('/api/candidates/hire/<int:id>', methods=['POST'])
 @require_role('admin', 'cs')
 def hire_candidate(id):
-    user = get_current_user()
-        
+    company_name = request.form.get('company_name', '').strip()
+    company_logo_url = None
+
+    logo_file = request.files.get('company_logo')
+    if logo_file and logo_file.filename:
+        ext = os.path.splitext(logo_file.filename)[1].lower()
+        allowed = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}
+        if ext in allowed:
+            filename = f"company_{id}_{int(__import__('time').time())}{ext}"
+            upload_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static', 'uploads', 'avatars')
+            os.makedirs(upload_dir, exist_ok=True)
+            logo_file.save(os.path.join(upload_dir, filename))
+            company_logo_url = f"/static/uploads/avatars/{filename}"
+
     try:
         conn = get_db_connection()
-        conn.execute("UPDATE candidates SET availability='Hired' WHERE id = ?", (id,))
+        if company_logo_url:
+            conn.execute(
+                "UPDATE candidates SET availability='Hired', company_name=?, company_logo_url=? WHERE id=?",
+                (company_name or None, company_logo_url, id)
+            )
+        else:
+            conn.execute(
+                "UPDATE candidates SET availability='Hired', company_name=? WHERE id=?",
+                (company_name or None, id)
+            )
         conn.commit()
         conn.close()
         log_action('HIRE_CANDIDATE', id)
