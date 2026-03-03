@@ -12,9 +12,53 @@
 
 <div class="card animate-in delay-1"
     style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+    <div
+        style="padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+        <div style="flex: 1; min-width: 250px;">
+            <label
+                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Search
+                Candidate</label>
+            <div style="position: relative;">
+                <input type="text" id="name-filter" placeholder="Filter by name..." onkeyup="filterMeetings()"
+                    style="width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.875rem; outline: none;">
+                <i data-lucide="search"
+                    style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+            </div>
+        </div>
+
+        <div style="width: 180px;">
+            <label
+                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Status</label>
+            <select id="status-filter" onchange="filterMeetings()"
+                style="width: 100%; padding: 0.6rem 1rem; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.875rem; outline: none; appearance: auto;">
+                <option value="">All Statuses</option>
+                <option value="Pending">⏳ Pending</option>
+                <option value="Accepted">✅ Accepted</option>
+                <option value="Scheduled">📅 Scheduled</option>
+                <option value="Completed">🎉 Completed</option>
+                <option value="Cancelled">❌ Cancelled</option>
+            </select>
+        </div>
+
+        <div style="width: 180px;">
+            <label
+                style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Date
+                Requested</label>
+            <input type="date" id="date-filter" onchange="filterMeetings()"
+                style="width: 100%; padding: 0.6rem 1rem; background: var(--surface-hover); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.875rem; outline: none; color-scheme: dark;">
+        </div>
+
+        <button onclick="clearFilters()"
+            style="padding: 0.6rem 1.25rem; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+            onmouseover="this.style.color='white'; this.style.borderColor='var(--text-muted)'"
+            onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border)'">
+            Clear
+        </button>
+    </div>
+
     {% if meetings %}
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <table id="meetings-table" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
                     <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.875rem;">
@@ -31,7 +75,9 @@
             </thead>
             <tbody>
                 {% for meeting in meetings %}
-                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;"
+                <tr class="meeting-row" data-candidate="{{ meeting.candidate_name|lower }}"
+                    data-status="{{ meeting.status }}" data-date="{{ meeting.created_at[:10] }}"
+                    style="border-bottom: 1px solid var(--border); transition: background 0.2s;"
                     onmouseover="this.style.background='rgba(255,255,255,0.02)'"
                     onmouseout="this.style.background='transparent'">
                     <td style="padding: 1rem 1.5rem;">
@@ -48,6 +94,7 @@
                             </div>
                             <div>
                                 <a href="{{ url_for('candidate_profile', id=meeting.candidate_id) }}"
+                                    class="candidate-name"
                                     style="font-weight: 600; color: white; text-decoration: none; display: block; margin-bottom: 0.25rem;">
                                     {{ meeting.candidate_name }}
                                 </a>
@@ -69,7 +116,8 @@
                         {% if user.role != 'client' %}
                         <!-- Admin/CS: Interactive status dropdown + Save button -->
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <select id="status-{{ meeting.id }}" onchange="showSaveBtn({{ meeting.id }})"
+                            <select id="status-{{ meeting.id }}" class="row-status-select"
+                                onchange="showSaveBtn({{ meeting.id }}); updateRowStatusAttr({{ meeting.id }}, this.value)"
                                 style="background: var(--surface-hover); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; outline: none; appearance: auto;">
                                 <option value="Pending" {% if meeting.status=='Pending' %}selected{% endif %}
                                     style="background: #1e293b;">⏳ Pending</option>
@@ -138,11 +186,58 @@
     {% endif %}
 </div>
 
-{% if user.role != 'client' %}
 <script>
+    function filterMeetings() {
+        const nameQuery = document.getElementById('name-filter').value.toLowerCase();
+        const statusQuery = document.getElementById('status-filter').value;
+        const dateQuery = document.getElementById('date-filter').value;
+        const rows = document.querySelectorAll('.meeting-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-candidate');
+            const status = row.getAttribute('data-status');
+            const date = row.getAttribute('data-date');
+
+            const nameMatch = name.includes(nameQuery);
+            const statusMatch = !statusQuery || status === statusQuery;
+            const dateMatch = !dateQuery || date === dateQuery;
+
+            if (nameMatch && statusMatch && dateMatch) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function clearFilters() {
+        document.getElementById('name-filter').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('date-filter').value = '';
+        filterMeetings();
+    }
+
+    function updateRowStatusAttr(meetingId, newStatus) {
+        const row = document.getElementById('status-' + meetingId).closest('.meeting-row');
+        if (row) {
+            row.setAttribute('data-status', newStatus);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+
+    {% if user.role != 'client' %}
     function showSaveBtn(meetingId) {
-        document.getElementById('save-btn-' + meetingId).style.display = 'inline-block';
-        document.getElementById('save-indicator-' + meetingId).style.display = 'none';
+        const btn = document.getElementById('save-btn-' + meetingId);
+        if (btn) btn.style.display = 'inline-block';
+        const indicator = document.getElementById('save-indicator-' + meetingId);
+        if (indicator) indicator.style.display = 'none';
     }
 
     async function saveMeetingStatus(meetingId) {
@@ -190,6 +285,6 @@
             saveBtn.disabled = false;
         }
     }
+    {% endif %}
 </script>
-{% endif %}
 {% endblock %}
