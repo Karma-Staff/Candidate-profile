@@ -242,59 +242,62 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
         html_body = f"""
         <!DOCTYPE html>
         <html>
-        <body style="font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background: #f4f6f8; padding: 40px 0;">
+        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
             <tr>
               <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 32px 40px; text-align: center;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Welcome to Karma Staff</h1>
-                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Candidate Profile Platform</p>
+                    <td style="background: #0f172a; padding: 40px; text-align: center;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Welcome to Karma Staff</h1>
+                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Talent Intelligence Platform</p>
                     </td>
                   </tr>
                   <!-- Body -->
                   <tr>
-                    <td style="padding: 40px;">
-                      <p style="color: #334155; font-size: 16px; margin: 0 0 24px;">Hi <strong>{username}</strong>,</p>
-                      <p style="color: #475569; font-size: 15px; margin: 0 0 24px; line-height: 1.6;">
-                        Your account has been created on the <strong>Karma Staff Candidate Profile Application</strong>.
-                        Below are your login credentials &mdash; please keep them safe.
+                    <td style="padding: 48px 40px;">
+                      <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{username}</strong>,</p>
+                      <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
+                        Your account has been created on the <strong>Karma Staff portal</strong>.
+                        Find your secure login credentials below.
                       </p>
+                      
                       <!-- Credentials Box -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
                         <tr>
-                          <td style="padding: 24px 28px;">
-                            <p style="margin: 0 0 12px; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Your Credentials</p>
-                            <p style="margin: 0 0 8px; color: #1e293b; font-size: 15px;">
-                              <span style="display: inline-block; width: 90px; color: #64748b; font-weight: 600;">Username:</span>
+                          <td style="padding: 24px 32px;">
+                            <p style="margin: 0 0 16px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Secure Credentials</p>
+                            <p style="margin: 0 0 12px; color: #1e293b; font-size: 15px;">
+                              <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Username:</span>
                               <strong style="color: #0f172a;">{username}</strong>
                             </p>
                             <p style="margin: 0; color: #1e293b; font-size: 15px;">
-                              <span style="display: inline-block; width: 90px; color: #64748b; font-weight: 600;">Password:</span>
-                              <strong style="color: #0f172a; font-family: monospace; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">{plain_password}</strong>
+                              <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Password:</span>
+                              <strong style="color: #0f172a; font-family: 'SFMono-Regular', Consolas, monospace; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 14px;">{plain_password}</strong>
                             </p>
                           </td>
                         </tr>
                       </table>
-                      <!-- Login Button -->
+
+                      <!-- Action Button -->
                       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
                         <tr>
                           <td align="center">
-                            <a href="{login_url}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em;">Login to the Platform</a>
+                            <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; transition: background 0.2s;">Login to the Platform</a>
                           </td>
                         </tr>
                       </table>
-                      <p style="color: #64748b; font-size: 13px; line-height: 1.6; margin: 0;">
+
+                      <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
                         If you did not expect this email, please contact your administrator.
                       </p>
                     </td>
                   </tr>
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafc; padding: 20px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
-                      <p style="color: #94a3b8; font-size: 12px; margin: 0;">&copy; 2025 Karma Staff &bull; Candidate Profile Platform</p>
+                    <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
+                      <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
                     </td>
                   </tr>
                 </table>
@@ -832,6 +835,15 @@ def delete_user(id):
         
     try:
         conn = get_db_connection()
+        # Delete related records to satisfy foreign key constraints
+        conn.execute("DELETE FROM assignments WHERE client_id = ?", (id,))
+        conn.execute("DELETE FROM audit_logs WHERE user_id = ?", (id,))
+        conn.execute("DELETE FROM notifications WHERE user_id = ?", (id,))
+        conn.execute("DELETE FROM meetings WHERE client_id = ?", (id,))
+        conn.execute("DELETE FROM rejections WHERE client_id = ?", (id,))
+        conn.execute("DELETE FROM feedbacks WHERE client_id = ?", (id,))
+        
+        # Finally, delete the user
         conn.execute("DELETE FROM users WHERE id = ?", (id,))
         conn.commit()
         conn.close()
@@ -1047,6 +1059,11 @@ def save_assignments():
     try:
         conn = get_db_connection()
         
+        # Get client's email and username
+        client_info = conn.execute("SELECT username, email FROM users WHERE id = ?", (client_id,)).fetchone()
+        client_name = client_info['username'] if client_info and client_info['username'] else 'Client'
+        client_email = client_info['email'] if client_info else None
+
         # Ensure candidate_ids are integers for reliable comparison
         candidate_ids = [int(cid) for cid in candidate_ids if cid]
         
@@ -1078,6 +1095,77 @@ def save_assignments():
         for name in candidate_names:
             msg = f"Admin has assigned a new candidate to your portal: {name}"
             create_notification(client_id, "New Candidate Assigned", msg, "info")
+            
+            # Send email to the client using Resend
+            if client_email:
+                try:
+                    import time
+                    resend.api_key = os.getenv('RESEND_API_KEY')
+                    from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
+                    login_url = request.host_url.rstrip('/') + url_for('login')
+                    
+                    html_body = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+                        <tr>
+                          <td align="center">
+                            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                              <!-- Header -->
+                              <tr>
+                                <td style="background: #0f172a; padding: 40px; text-align: center;">
+                                  <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">New Candidate Assigned</h1>
+                                  <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
+                                </td>
+                              </tr>
+                              <!-- Body -->
+                              <tr>
+                                <td style="padding: 48px 40px;">
+                                  <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{client_name}</strong>,</p>
+                                  <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
+                                    Admin has assigned a new candidate, <strong style="color: #0f172a;">{name}</strong>, to your portal. 
+                                    You can now view their full profile, technical grades, and introduction videos.
+                                  </p>
+                                  
+                                  <!-- Action Button -->
+                                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                                    <tr>
+                                      <td align="center">
+                                        <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Profile in Portal</a>
+                                      </td>
+                                    </tr>
+                                  </table>
+                                  
+                                  <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
+                                    If you have any questions regarding this candidate, please reach out to your account manager.
+                                  </p>
+                                </td>
+                              </tr>
+                              <!-- Footer -->
+                              <tr>
+                                <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
+                                  <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </body>
+                    </html>
+                    """
+                    
+                    params = {
+                        "from": from_email,
+                        "to": [client_email],
+                        "subject": f"New Candidate Assigned: {name}",
+                        "html": html_body,
+                    }
+                    resend.Emails.send(params)
+                    time.sleep(1) # Add delay to avoid hitting rate limits
+                except Exception as email_err:
+                    logger.error(f"Failed to send assignment email to {client_email}: {email_err}")
             
         log_action('UPDATE_ASSIGNMENTS', client_id)
         return jsonify({'status': 'success'})
@@ -1138,22 +1226,75 @@ def request_meeting_api():
         
         for email_to in receiver_emails:
             try:
+                login_url = request.host_url.rstrip('/') + url_for('meetings')
+                html_body = f"""
+                <!DOCTYPE html>
+                <html>
+                <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+                    <tr>
+                      <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                          <!-- Header -->
+                          <tr>
+                            <td style="background: #0f172a; padding: 40px; text-align: center;">
+                              <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;"><span style="color: #ef4444;">Urgent !!</span> Candidate Desired</h1>
+                              <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Meeting Request • Karma Staff</p>
+                            </td>
+                          </tr>
+                          <!-- Body -->
+                          <tr>
+                            <td style="padding: 48px 40px;">
+                              <p style="color: #475569; font-size: 16px; margin: 0 0 24px;">New Meeting Request Received:</p>
+                              
+                              <!-- Details Box -->
+                              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
+                                <tr>
+                                  <td style="padding: 32px;">
+                                    <p style="margin: 0 0 16px; color: #1e293b; font-size: 15px;">
+                                      <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Client:</span>
+                                      <strong style="color: #0f172a;">{client_name}</strong> <span style="color: #94a3b8; font-size: 13px;">({client_email})</span>
+                                    </p>
+                                    <p style="margin: 0; color: #1e293b; font-size: 15px;">
+                                      <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Candidate:</span>
+                                      <strong style="color: #0f172a;">{candidate_name}</strong>
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+
+                              <p style="color: #475569; font-size: 15px; margin: 0 0 32px; line-height: 1.6;">
+                                The client has requested to book an appointment with this candidate. Please log in to manage this request and schedule the session.
+                              </p>
+                              
+                              <!-- Action Button -->
+                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                                <tr>
+                                  <td align="center">
+                                    <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Manage Meeting Request</a>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                          <!-- Footer -->
+                          <tr>
+                            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
+                              <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """
                 params = {
                     "from": from_email,
                     "to": [email_to],
                     "subject": "Urgent !! Candidate available",
-                    "html": f"""
-                        <div style='font-family: sans-serif; padding: 20px; color: #333;'>
-                            <h2 style='color: #22c55e; font-weight: normal;'><span style='color: red;'>Urgent !!</span> Candidate available</h2>
-                            <hr style='border: 1px solid #eee;' />
-                            <p><strong>New Meeting Request</strong></p>
-                            <p><strong>Client:</strong> {client_name} ({client_email})</p>
-                            <p><strong>Candidate:</strong> {candidate_name}</p>
-                            <p>The client has requested to book an appointment with this candidate via the Karma Staff Portal.</p>
-                            <hr style='border: 1px solid #eee;' />
-                            <p style='font-size: 10px; color: #999;'>Karma Staff Talent Intelligence</p>
-                        </div>
-                    """,
+                    "html": html_body,
                 }
                 logger.info(f"Attempting email delivery to {email_to} via {from_email}")
                 response = resend.Emails.send(params)
@@ -1181,11 +1322,12 @@ def update_meeting_status(meeting_id):
     try:
         conn = get_db_connection()
         
-        # Get the meeting details before updating
+        # Get the meeting details before updating, including client info
         meeting = conn.execute("""
-            SELECT m.*, c.name as candidate_name 
+            SELECT m.*, c.name as candidate_name, u.username as client_name, u.email as client_email
             FROM meetings m 
             JOIN candidates c ON m.candidate_id = c.id 
+            JOIN users u ON m.client_id = u.id
             WHERE m.id = ?
         """, (meeting_id,)).fetchone()
         
@@ -1201,13 +1343,110 @@ def update_meeting_status(meeting_id):
         conn.commit()
         conn.close()
         
-        # Notify the client about the status change
+        # 1. Notify the client internally
         create_notification(
             meeting['client_id'],
             "Meeting Status Updated",
             f"Your meeting request for {meeting['candidate_name']} has been updated to: {new_status}"
         )
         
+        # 2. Send Email Notification via Resend
+        client_email = meeting['client_email']
+        client_name = meeting['client_name']
+        candidate_name = meeting['candidate_name']
+        
+        if client_email:
+            try:
+                import time
+                resend.api_key = os.getenv('RESEND_API_KEY')
+                from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
+                login_url = request.host_url.rstrip('/') + url_for('meetings')
+                
+                # Dynamic content based on status
+                status_messages = {
+                    'Accepted': f"Admin has <strong>accepted</strong> your meeting request for <strong>{candidate_name}</strong>.",
+                    'Scheduled': f"Admin has <strong>scheduled</strong> the meeting for <strong>{candidate_name}</strong>. Please check the portal for time details.",
+                    'Completed': f"The meeting for <strong>{candidate_name}</strong> has been marked as <strong>Completed</strong>.",
+                    'Cancelled': f"The meeting request for <strong>{candidate_name}</strong> has been <strong>Cancelled</strong>."
+                }
+                
+                status_msg = status_messages.get(new_status, f"Your meeting request for <strong>{candidate_name}</strong> has been updated to <strong>{new_status}</strong>.")
+                subject = f"Meeting Status Update: {new_status}"
+                
+                html_body = f"""
+                <!DOCTYPE html>
+                <html>
+                <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
+                    <tr>
+                      <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                          <!-- Header -->
+                          <tr>
+                            <td style="background: #0f172a; padding: 40px; text-align: center;">
+                              <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Meeting Update</h1>
+                              <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
+                            </td>
+                          </tr>
+                          <!-- Body -->
+                          <tr>
+                            <td style="padding: 48px 40px;">
+                              <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{client_name}</strong>,</p>
+                              <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
+                                {status_msg}
+                              </p>
+                              
+                              <!-- Status Detail Box -->
+                              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
+                                <tr>
+                                  <td style="padding: 32px;">
+                                    <p style="margin: 0; color: #1e293b; font-size: 16px;">
+                                      <span style="display: inline-block; width: 140px; color: #64748b; font-weight: 600;">Updated Status:</span>
+                                      <strong style="color: {'#10b981' if new_status in ['Accepted', 'Completed'] else '#3b82f6' if new_status == 'Scheduled' else '#ef4444' if new_status == 'Cancelled' else '#f59e0b'}; text-transform: uppercase; letter-spacing: 0.05em;">{new_status}</strong>
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+
+                              <!-- Action Button -->
+                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                                <tr>
+                                  <td align="center">
+                                    <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Details in Portal</a>
+                                  </td>
+                                </tr>
+                              </table>
+                              
+                              <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
+                                If you have any questions, please reply to this email or contact support.
+                              </p>
+                            </td>
+                          </tr>
+                          <!-- Footer -->
+                          <tr>
+                            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
+                              <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """
+                
+                params = {
+                    "from": from_email,
+                    "to": [client_email],
+                    "subject": subject,
+                    "html": html_body,
+                }
+                resend.Emails.send(params)
+                time.sleep(1) # Rate limit protection
+            except Exception as email_err:
+                logger.error(f"Failed to send status update email to {client_email}: {email_err}")
+
         log_action('UPDATE_MEETING_STATUS', meeting_id)
         return jsonify({'status': 'success', 'message': f'Meeting status updated to {new_status}'})
         
