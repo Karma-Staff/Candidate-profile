@@ -784,7 +784,7 @@ def create_candidate():
                     return None
 
                 # Ensure directory exists before saving
-                os.makedirs(os.path.join(app.static_folder, 'uploads', folder), exist_ok=True)
+                os.makedirs(os.path.join(UPLOAD_BASE, folder), exist_ok=True)
 
                 # Use name to make filename somewhat unique but safe
                 clean_name = secure_filename(name.replace(' ', '_'))
@@ -801,18 +801,23 @@ def create_candidate():
     if avatar_url is None or resume_url is None or video_url is None:
         return {"error": "Invalid file type uploaded. Allowed: Images, PDFs, and common video formats."}, 400
 
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.execute('''
             INSERT INTO candidates (name, email, phone, location, professional_title, experience_years, availability, bio, skills, hobbies, avatar_url, resume_url, video_url)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (name, email, phone, location, professional_title, experience_years, availability, bio, skills, hobbies, avatar_url, resume_url, video_url))
+        new_id = cursor.lastrowid
         conn.commit()
-        conn.close()
-        log_action('CREATE_CANDIDATE', cursor.lastrowid, notes=f"Added: {name}")
+        log_action('CREATE_CANDIDATE', new_id, notes=f"Added: {name}")
         return redirect(url_for('candidates'))
     except Exception as e:
+        logger.error(f"Error creating candidate: {e}")
         return {"error": str(e)}, 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/users')
 @require_role('admin')
@@ -845,21 +850,22 @@ def create_user():
 
     password = generate_password_hash('demo123')
 
-    avatar_url = None
-    if 'avatar' in request.files:
-        file = request.files['avatar']
-        if file and file.filename:
-            if not allowed_file(file.filename, 'avatars'):
-                return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
-
-            from werkzeug.utils import secure_filename
-            filename = secure_filename(f"{username}_{file.filename}")
-            upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
-            file.save(upload_path)
-            avatar_url = f"/static/uploads/avatars/{filename}"
-
-    conn = get_db_connection()
+    conn = None
     try:
+        avatar_url = None
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file and file.filename:
+                if not allowed_file(file.filename, 'avatars'):
+                    return jsonify({"success": False, "message": "Invalid avatar file type"}), 400
+
+                from werkzeug.utils import secure_filename
+                filename = secure_filename(f"{username}_{file.filename}")
+                upload_path = os.path.join(UPLOAD_BASE, 'avatars', filename)
+                file.save(upload_path)
+                avatar_url = f"/static/uploads/avatars/{filename}"
+
+        conn = get_db_connection()
         # Check for duplicate username
         existing_username = conn.execute(
             "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
@@ -878,10 +884,11 @@ def create_user():
         if existing_email:
             return jsonify({"success": False, "message": "Email already in use"}), 400
 
-        conn.execute("INSERT INTO users (username, password, role, avatar_url, email, help_needs, software_usage) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        cursor = conn.execute("INSERT INTO users (username, password, role, avatar_url, email, help_needs, software_usage) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (username, password, role, avatar_url, email, help_needs, software_usage))
+        new_id = cursor.lastrowid
         conn.commit()
-        log_action('CREATE_USER', username)
+        log_action('CREATE_USER', new_id, notes=f"Created user: {username}")
 
         # Send welcome / credential email to the new user
         plain_password = 'demo123'
@@ -893,7 +900,8 @@ def create_user():
         logger.error(f"User creation error: {e}")
         return jsonify({"success": False, "message": "Internal server error"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @app.route('/api/users/<int:id>')
 @require_role('admin')
@@ -918,8 +926,9 @@ def update_user_api(id):
     if not username or not email:
         return jsonify({"success": False, "message": "Username and Email are required"}), 400
 
-    conn = get_db_connection()
+    conn = None
     try:
+        conn = get_db_connection()
         # Check for duplicate username (excluding self)
         existing_username = conn.execute(
             "SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?",
@@ -948,7 +957,7 @@ def update_user_api(id):
 
                 from werkzeug.utils import secure_filename
                 filename = secure_filename(f"{username}_{file.filename}")
-                upload_path = os.path.join(app.static_folder, 'uploads', 'avatars', filename)
+                upload_path = os.path.join(UPLOAD_BASE, 'avatars', filename)
                 file.save(upload_path)
                 avatar_url = f"/static/uploads/avatars/{filename}"
 
@@ -963,7 +972,8 @@ def update_user_api(id):
         logger.error(f"User update error: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @app.route('/api/users/delete/<int:id>', methods=['POST', 'DELETE'])
 @require_role('admin')
@@ -972,6 +982,7 @@ def delete_user(id):
     if current_user['id'] == id:
         return jsonify({"success": False, "message": "You cannot delete your own account"}), 400
 
+    conn = None
     try:
         conn = get_db_connection()
         # Delete related records to satisfy foreign key constraints
@@ -985,7 +996,6 @@ def delete_user(id):
         # Finally, delete the user
         conn.execute("DELETE FROM users WHERE id = ?", (id,))
         conn.commit()
-        conn.close()
         log_action('DELETE_USER', id)
 
         if request.method == 'DELETE' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -994,6 +1004,9 @@ def delete_user(id):
     except Exception as e:
         logger.error(f"User deletion error: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/api/users/<int:id>/logs')
 @require_role('admin')
