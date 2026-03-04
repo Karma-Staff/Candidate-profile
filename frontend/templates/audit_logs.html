@@ -11,32 +11,66 @@
     </button>
 </div>
 
-<div class="animate-in delay-1" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center;">
+<div class="animate-in delay-1"
+    style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+    <!-- Action Filter -->
     <div
         style="background: var(--glass); padding: 0.25rem; border-radius: 12px; display: flex; gap: 0.25rem; border: 1px solid var(--border);">
-        <button class="filter-btn active" onclick="filterLogs('ALL')"
+        <button class="filter-btn active" data-filter="action" onclick="setFilter('action', 'ALL')"
             style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
             All Logs
         </button>
-        <button class="filter-btn" onclick="filterLogs('CREATE_CANDIDATE')"
+        <button class="filter-btn" data-filter="action" onclick="setFilter('action', 'CREATE_CANDIDATE')"
             style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            Added Candidates
+            Added
         </button>
-        <button class="filter-btn" onclick="filterLogs('DELETE_CANDIDATE')"
+        <button class="filter-btn" data-filter="action" onclick="setFilter('action', 'DELETE_CANDIDATE')"
             style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            Deleted Candidates
+            Deleted
         </button>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div
+        style="background: var(--glass); padding: 0.25rem; border-radius: 12px; display: flex; gap: 0.25rem; border: 1px solid var(--border);">
+        <button class="range-btn active" data-range="ALL" onclick="setFilter('range', 'ALL')"
+            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            All Time
+        </button>
+        <button class="range-btn" data-range="TODAY" onclick="setFilter('range', 'TODAY')"
+            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            Today
+        </button>
+        <button class="range-btn" data-range="WEEK" onclick="setFilter('range', 'WEEK')"
+            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            This Week
+        </button>
+        <button class="range-btn" data-range="MONTH" onclick="setFilter('range', 'MONTH')"
+            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            This Month
+        </button>
+    </div>
+
+    <!-- Specific Date Picker -->
+    <div style="position: relative; display: flex; align-items: center;">
+        <i data-lucide="calendar"
+            style="position: absolute; left: 1rem; width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
+        <input type="date" id="dateInput" onchange="setFilter('date', this.value)"
+            style="background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.5rem 1rem 0.5rem 2.5rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
     </div>
 </div>
 
 <style>
-    .filter-btn.active {
+    .filter-btn.active,
+    .range-btn.active {
         background: var(--accent) !important;
         color: white !important;
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
-    .filter-btn:not(.active):hover {
+    .filter-btn:not(.active):hover,
+    .range-btn:not(.active):hover {
         background: var(--glass-strong);
     }
 </style>
@@ -54,7 +88,7 @@
         </thead>
         <tbody>
             {% for log in logs %}
-            <tr class="log-row" data-action="{{ log.action }}">
+            <tr class="log-row" data-action="{{ log.action }}" data-timestamp="{{ log.timestamp }}">
                 <td
                     style="white-space: nowrap; font-family: 'SF Mono', monospace; font-size: 0.8125rem; color: var(--text-light);">
                     {{ log.timestamp }}
@@ -114,21 +148,59 @@
 </div>
 
 <script>
-    function filterLogs(action) {
-        // Update active button state
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if ((action === 'ALL' && btn.innerText.includes('All')) ||
-                (action === 'CREATE_CANDIDATE' && btn.innerText.includes('Added')) ||
-                (action === 'DELETE_CANDIDATE' && btn.innerText.includes('Deleted'))) {
-                btn.classList.add('active');
-            }
-        });
+    let currentFilters = {
+        action: 'ALL',
+        range: 'ALL',
+        date: null
+    };
 
-        // Filter rows
+    function setFilter(type, value) {
+        if (type === 'action') {
+            currentFilters.action = value;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${value}'`));
+            });
+        } else if (type === 'range') {
+            currentFilters.range = value;
+            currentFilters.date = null;
+            document.getElementById('dateInput').value = '';
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === value);
+            });
+        } else if (type === 'date') {
+            currentFilters.date = value;
+            currentFilters.range = 'SPECIFIC';
+            document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+        }
+        applyFilters();
+    }
+
+    function applyFilters() {
         const rows = document.querySelectorAll('.log-row');
+        const now = new Date();
+
         rows.forEach(row => {
-            if (action === 'ALL' || row.dataset.action === action) {
+            const rowAction = row.dataset.action;
+            const rowDate = new Date(row.dataset.timestamp);
+
+            let actionMatch = currentFilters.action === 'ALL' || rowAction === currentFilters.action;
+            let dateMatch = true;
+
+            if (currentFilters.range === 'TODAY') {
+                dateMatch = rowDate.toDateString() === now.toDateString();
+            } else if (currentFilters.range === 'WEEK') {
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+                dateMatch = rowDate >= startOfWeek;
+            } else if (currentFilters.range === 'MONTH') {
+                dateMatch = rowDate.getMonth() === now.getMonth() && rowDate.getFullYear() === now.getFullYear();
+            } else if (currentFilters.range === 'SPECIFIC' && currentFilters.date) {
+                const targetDate = new Date(currentFilters.date);
+                dateMatch = rowDate.toDateString() === targetDate.toDateString();
+            }
+
+            if (actionMatch && dateMatch) {
                 row.style.display = '';
                 row.classList.add('animate-in');
             } else {
