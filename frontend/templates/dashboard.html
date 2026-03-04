@@ -100,9 +100,10 @@
         <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
             <i data-lucide="activity" style="width: 20px; color: var(--accent);"></i> Recent Activity
         </h2>
-        <button class="btn btn-outline" style="font-size: 0.8125rem;">
+        <a href="{{ url_for('audit_logs_page') }}" class="btn btn-outline"
+            style="font-size: 0.8125rem; text-decoration: none;">
             <i data-lucide="external-link" style="width: 14px;"></i> View All
-        </button>
+        </a>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">

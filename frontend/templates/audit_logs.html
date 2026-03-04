@@ -44,13 +44,27 @@
                     </span>
                 </td>
                 <td style="color: var(--text-light);">
-                    {% if log.candidate_name %}
-                    <span style="font-weight: 500;">{{ log.candidate_name }}</span>
+                    {% set display_name = log.candidate_name %}
+                    {% if not display_name and log.notes %}
+                    {% if 'Added: ' in log.notes %}
+                    {% set display_name = log.notes.split('Added: ')[1] %}
+                    {% elif 'Candidate: ' in log.notes %}
+                    {% set display_name = log.notes.split('Candidate: ')[1].split('. Reason:')[0] %}
+                    {% endif %}
+                    {% endif %}
+
+                    {% if display_name %}
+                    <span style="font-weight: 500;">{{ display_name }}</span>
                     <span style="color: var(--text-lighter); font-size: 0.75rem;"> (ID: {{ log.resource_id }})</span>
                     {% elif log.resource_id %}
                     ID: {{ log.resource_id }}
                     {% else %}
                     <span style="color: var(--text-lighter);">—</span>
+                    {% endif %}
+
+                    {% if log.action == 'DELETE_CANDIDATE' and log.notes and 'Reason: ' in log.notes %}
+                    <br><span style="color: #ef4444; font-size: 0.75rem; font-style: italic;">Reason: {{
+                        log.notes.split('Reason: ')[1] }}</span>
                     {% endif %}
                 </td>
                 <td style="font-family: 'SF Mono', monospace; font-size: 0.75rem; color: var(--text-lighter);">
