@@ -12,67 +12,67 @@
 </div>
 
 <div class="animate-in delay-1"
-    style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-    <!-- Action Filter -->
-    <div
-        style="background: var(--glass); padding: 0.25rem; border-radius: 12px; display: flex; gap: 0.25rem; border: 1px solid var(--border);">
-        <button class="filter-btn active" data-filter="action" onclick="setFilter('action', 'ALL')"
-            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            All Logs
-        </button>
-        <button class="filter-btn" data-filter="action" onclick="setFilter('action', 'CREATE_CANDIDATE')"
-            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            Added
-        </button>
-        <button class="filter-btn" data-filter="action" onclick="setFilter('action', 'DELETE_CANDIDATE')"
-            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            Deleted
-        </button>
+    style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-end;">
+    <!-- Action Filter Dropdown -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label
+            style="font-size: 0.75rem; font-weight: 600; color: var(--text-lighter); text-transform: uppercase; letter-spacing: 0.05em;">Action
+            Type</label>
+        <div style="position: relative; min-width: 200px;">
+            <select id="actionFilter" onchange="setFilter('action', this.value)"
+                style="width: 100%; background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.625rem 2.5rem 0.625rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none; appearance: none;">
+                <option value="ALL">All Actions</option>
+                <option value="CREATE_CANDIDATE">Added Candidates</option>
+                <option value="DELETE_CANDIDATE">Deleted Candidates</option>
+                <option value="LOGIN">User Logins</option>
+                <option value="LOGOUT">User Logouts</option>
+            </select>
+            <i data-lucide="chevron-down"
+                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
+        </div>
     </div>
 
-    <!-- Date Range Filter -->
-    <div
-        style="background: var(--glass); padding: 0.25rem; border-radius: 12px; display: flex; gap: 0.25rem; border: 1px solid var(--border);">
-        <button class="range-btn active" data-range="ALL" onclick="setFilter('range', 'ALL')"
-            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            All Time
-        </button>
-        <button class="range-btn" data-range="TODAY" onclick="setFilter('range', 'TODAY')"
-            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            Today
-        </button>
-        <button class="range-btn" data-range="WEEK" onclick="setFilter('range', 'WEEK')"
-            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            This Week
-        </button>
-        <button class="range-btn" data-range="MONTH" onclick="setFilter('range', 'MONTH')"
-            style="padding: 0.5rem 1rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
-            This Month
-        </button>
+    <!-- Time Range Dropdown -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label
+            style="font-size: 0.75rem; font-weight: 600; color: var(--text-lighter); text-transform: uppercase; letter-spacing: 0.05em;">Time
+            Period</label>
+        <div style="position: relative; min-width: 180px;">
+            <select id="rangeFilter" onchange="setFilter('range', this.value)"
+                style="width: 100%; background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.625rem 2.5rem 0.625rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none; appearance: none;">
+                <option value="ALL">All Time</option>
+                <option value="TODAY">Today</option>
+                <option value="WEEK">This Week</option>
+                <option value="MONTH">This Month</option>
+                <option value="SPECIFIC">Specific Date...</option>
+            </select>
+            <i data-lucide="chevron-down"
+                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
+        </div>
     </div>
 
-    <!-- Specific Date Picker -->
-    <div style="position: relative; display: flex; align-items: center;">
-        <i data-lucide="calendar"
-            style="position: absolute; left: 1rem; width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
-        <input type="date" id="dateInput" onchange="setFilter('date', this.value)"
-            style="background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.5rem 1rem 0.5rem 2.5rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none;"
-            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <!-- Specific Date Picker (Conditional) -->
+    <div id="datePickerWrapper" style="display: none; flex-direction: column; gap: 0.5rem;" class="animate-in">
+        <label
+            style="font-size: 0.75rem; font-weight: 600; color: var(--text-lighter); text-transform: uppercase; letter-spacing: 0.05em;">Select
+            Date</label>
+        <div style="position: relative;">
+            <i data-lucide="calendar"
+                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
+            <input type="date" id="dateInput" onchange="setFilter('date', this.value)"
+                style="background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.625rem 1rem 0.625rem 2.5rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none;">
+        </div>
     </div>
 </div>
 
-<style>
-    .filter-btn.active,
-    .range-btn.active {
-        background: var(--accent) !important;
-        color: white !important;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
-
-    .filter-btn:not(.active):hover,
-    .range-btn:not(.active):hover {
-        background: var(--glass-strong);
-    }
+select:focus {
+border-color: var(--accent) !important;
+box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+select option {
+background: #0f172a;
+color: white;
+}
 </style>
 
 <div class="card animate-in delay-1" style="padding: 0; overflow: hidden;">
@@ -157,20 +157,16 @@
     function setFilter(type, value) {
         if (type === 'action') {
             currentFilters.action = value;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${value}'`));
-            });
         } else if (type === 'range') {
             currentFilters.range = value;
             currentFilters.date = null;
             document.getElementById('dateInput').value = '';
-            document.querySelectorAll('.range-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.range === value);
-            });
+
+            // Show/hide date picker based on selection
+            const wrapper = document.getElementById('datePickerWrapper');
+            wrapper.style.display = (value === 'SPECIFIC') ? 'flex' : 'none';
         } else if (type === 'date') {
             currentFilters.date = value;
-            currentFilters.range = 'SPECIFIC';
-            document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
         }
         applyFilters();
     }
