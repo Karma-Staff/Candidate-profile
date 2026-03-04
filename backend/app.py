@@ -521,7 +521,7 @@ def dashboard():
             LEFT JOIN candidates c ON al.resource_id = c.id
             WHERE al.user_id = ?
             ORDER BY al.timestamp DESC
-            LIMIT 10
+            LIMIT 50
         '''
         logs = conn.execute(logs_query, (user['id'],)).fetchall()
         total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs WHERE user_id = ?", (user['id'],)).fetchone()[0]
@@ -534,7 +534,7 @@ def dashboard():
             LEFT JOIN users u ON al.user_id = u.id
             LEFT JOIN candidates c ON al.resource_id = c.id
             ORDER BY al.timestamp DESC
-            LIMIT 10
+            LIMIT 50
         '''
         logs = conn.execute(logs_query).fetchall()
         total_logs = conn.execute("SELECT COUNT(*) FROM audit_logs").fetchone()[0]
