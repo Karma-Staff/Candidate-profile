@@ -53,16 +53,33 @@
     </button>
 </div>
 
-<div class="tabs animate-in delay-1" id="userTabs">
-    <div class="tab active" data-filter="all" onclick="filterUsers('all', this)">All Users</div>
-    <div class="tab" data-filter="admin" onclick="filterUsers('admin', this)">Admin</div>
-    <div class="tab" data-filter="cs" onclick="filterUsers('cs', this)">Customer Service</div>
-    <div class="tab" data-filter="client" onclick="filterUsers('client', this)">Client</div>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 2rem;"
+    class="animate-in delay-1">
+    <div class="tabs" id="userTabs" style="margin-bottom: 0; flex: 1;">
+        <div class="tab active" data-filter="all" onclick="filterUsers('all', this)">All Users</div>
+        <div class="tab" data-filter="admin" onclick="filterUsers('admin', this)">Admin</div>
+        <div class="tab" data-filter="cs" onclick="filterUsers('cs', this)">Customer Service</div>
+        <div class="tab" data-filter="client" onclick="filterUsers('client', this)">Client</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 180px;">
+        <label
+            style="font-size: 0.75rem; font-weight: 600; color: var(--text-lighter); text-transform: uppercase; letter-spacing: 0.05em;">Sort
+            By</label>
+        <div style="position: relative;">
+            <select id="userSort" onchange="sortUsers(this.value)"
+                style="width: 100%; background: var(--glass); border: 1px solid var(--border); color: var(--text-light); padding: 0.625rem 2.5rem 0.625rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: inherit; cursor: pointer; transition: all 0.2s; outline: none; appearance: none;">
+                <option value="newest">Newest Client</option>
+                <option value="oldest">Oldest Client</option>
+            </select>
+            <i data-lucide="chevron-down"
+                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-lighter); pointer-events: none;"></i>
+        </div>
+    </div>
 </div>
 
 <div class="user-list animate-in delay-2" id="userList">
-    {% for u in all_users %}
-    <div class="user-item" data-role="{{ u.role }}" style="opacity: 0; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; background: var(--glass); border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid var(--border);
+    <div class="user-item" data-role="{{ u.role }}" data-id="{{ u.id }}" style="opacity: 0; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; background: var(--glass); border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid var(--border);
         --delay: {{ loop.index * 0.06 }}s; animation: fadeInUp 0.4s ease forwards var(--delay);">
 
         <div class="user-info-main" style="display: flex; align-items: center; gap: 1rem;">
@@ -446,6 +463,30 @@
             }
         });
     }
+
+    function sortUsers(order) {
+        const list = document.getElementById('userList');
+        const items = Array.from(list.getElementsByClassName('user-item'));
+
+        items.sort((a, b) => {
+            const idA = parseInt(a.dataset.id);
+            const idB = parseInt(b.dataset.id);
+            return order === 'newest' ? idB - idA : idA - idB;
+        });
+
+        // Re-append in new order
+        items.forEach(item => {
+            item.style.animation = 'none'; // Reset animation to trigger it again
+            item.offsetHeight; // Flush CSS
+            item.style.animation = '';
+            list.appendChild(item);
+        });
+    }
+
+    // Initial sort (newest first)
+    document.addEventListener('DOMContentLoaded', () => {
+        sortUsers('newest');
+    });
 
     function selectRole(el) {
         document.querySelectorAll('.role-option').forEach(r => {
