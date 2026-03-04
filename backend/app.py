@@ -542,13 +542,29 @@ def dashboard():
         total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
 
     conn.close()
-
     return render_template('dashboard.html',
                          user=user,
                          logs=logs,
                          total_logs=total_logs,
                          total_candidates=total_candidates,
                          total_users=total_users)
+
+@app.route('/logs')
+@require_role('admin', 'cs')
+def audit_logs_page():
+    user = get_current_user()
+    conn = get_db_connection()
+    logs_query = '''
+        SELECT al.*, u.username, c.name as candidate_name
+        FROM audit_logs al
+        LEFT JOIN users u ON al.user_id = u.id
+        LEFT JOIN candidates c ON al.resource_id = c.id
+        ORDER BY al.timestamp DESC
+        LIMIT 500
+    '''
+    logs = conn.execute(logs_query).fetchall()
+    conn.close()
+    return render_template('audit_logs.html', user=user, logs=logs)
 
 @app.route('/meetings')
 @require_role('admin', 'cs', 'client')
