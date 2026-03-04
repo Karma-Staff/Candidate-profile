@@ -79,6 +79,7 @@
 </div>
 
 <div class="user-list animate-in delay-2" id="userList">
+    {% for u in all_users %}
     <div class="user-item" data-role="{{ u.role }}" data-id="{{ u.id }}" style="opacity: 0; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; background: var(--glass); border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid var(--border);
         --delay: {{ loop.index * 0.06 }}s; animation: fadeInUp 0.4s ease forwards var(--delay);">
 
