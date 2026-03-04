@@ -80,8 +80,8 @@
 
 <div class="user-list animate-in delay-2" id="userList">
     {% for u in all_users %}
-    <div class="user-item" data-role="{{ u.role }}" data-id="{{ u.id }}" style="opacity: 0; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; background: var(--glass); border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid var(--border);
-        --delay: {{ loop.index * 0.06 }}s; animation: fadeInUp 0.4s ease forwards var(--delay);">
+    <div class="user-item" data-role="{{ u.role }}" data-id="{{ u.id }}" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; background: var(--glass); border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid var(--border);
+        animation: fadeInUp 0.4s ease forwards; animation-delay: {{ loop.index0 * 0.04 }}s; opacity: 0;">
 
         <div class="user-info-main" style="display: flex; align-items: center; gap: 1rem;">
             {% if u.avatar_url %}
@@ -137,6 +137,13 @@
                 {% endif %}
             </div>
         </div>
+    </div>
+    {% else %}
+    <div id="noUsersMessage"
+        style="padding: 4rem 2rem; text-align: center; background: var(--glass); border-radius: var(--radius); border: 1px dashed var(--border);">
+        <i data-lucide="users"
+            style="width: 48px; height: 48px; color: var(--text-lighter); margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p style="color: var(--text-light); font-size: 1rem;">No users found.</p>
     </div>
     {% endfor %}
 </div>
@@ -476,10 +483,11 @@
         });
 
         // Re-append in new order
-        items.forEach(item => {
-            item.style.animation = 'none'; // Reset animation to trigger it again
-            item.offsetHeight; // Flush CSS
-            item.style.animation = '';
+        items.forEach((item, index) => {
+            item.style.animation = 'none';
+            item.offsetHeight; // force reflow
+            item.style.animation = `fadeInUp 0.4s ease forwards`;
+            item.style.animationDelay = `${index * 0.03}s`;
             list.appendChild(item);
         });
     }
