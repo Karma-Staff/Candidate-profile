@@ -123,11 +123,37 @@
 
                 <div>
                     <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.125rem;">
-                        {{ log.action | replace('_', ' ') | title }}
+                        {% set action_messages = {
+                        'CREATE_CANDIDATE': 'The admin has added the new candidate',
+                        'LOGIN': 'Logged into the platform',
+                        'LOGOUT': 'Logged out of the platform',
+                        'REQUEST_MEETING': 'Meeting request submitted',
+                        'UPDATE_MEETING_STATUS': 'Meeting status updated',
+                        'HIRE_CANDIDATE': 'Candidate officially hired',
+                        'UPDATE_CANDIDATE': 'Candidate profile updated',
+                        'DELETE_CANDIDATE': 'Candidate removed from platform',
+                        'AI_AGENT_CHAT': 'Interacted with Recruiter AI'
+                        } %}
+                        {{ action_messages.get(log.action, log.action | replace('_', ' ') | title) }}
+                        {% set display_name = log.candidate_name %}
+                        {% if not display_name and log.notes %}
+                        {% if 'Added: ' in log.notes %}
+                        {% set display_name = log.notes.split('Added: ')[1] %}
+                        {% elif 'Candidate: ' in log.notes %}
+                        {% set display_name = log.notes.split('Candidate: ')[1].split('. Reason:')[0] %}
+                        {% endif %}
+                        {% endif %}
+                        {% if display_name %}
+                        - <span style="color: var(--accent);">{{ display_name }}</span>
+                        {% endif %}
                     </div>
                     <div style="font-size: 0.75rem; color: var(--text-lighter);">
-                        {{ log.username }}
-                        {% if log.candidate_name %} • {{ log.candidate_name }}{% endif %}
+                        admin : {{ log.username }}
+                        {% if display_name %} • candidate : {{ display_name }}{% endif %}
+                        {% if log.action == 'DELETE_CANDIDATE' and log.notes and 'Reason: ' in log.notes %}
+                        <br><span style="color: #ef4444; font-style: italic;">Reason: {{ log.notes.split('Reason: ')[1]
+                            }}</span>
+                        {% endif %}
                     </div>
 
                 </div>

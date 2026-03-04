@@ -212,14 +212,14 @@ def require_role(*roles):
         return decorated_function
     return decorator
 
-def log_action(action, resource_id=None):
+def log_action(action, resource_id=None, notes=None):
     user_id = session.get('user_id')
     ip_address = request.remote_addr
     conn = get_db_connection()
     conn.execute('''
-        INSERT INTO audit_logs (user_id, action, resource_id, ip_address)
-        VALUES (?, ?, ?, ?)
-    ''', (user_id, action, resource_id, ip_address))
+        INSERT INTO audit_logs (user_id, action, resource_id, ip_address, notes)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, action, resource_id, ip_address, notes))
     conn.commit()
     conn.close()
 
@@ -252,7 +252,7 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
                   <!-- Header -->
                   <tr>
                     <td style="background: #1e293b; padding: 40px; text-align: center;">
-                      <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                      <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                       <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Welcome to Karma Staff</h1>
                       <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Talent Intelligence Platform</p>
                     </td>
@@ -337,7 +337,7 @@ def send_forgot_password_email(to_email: str, username: str, temp_password: str,
                   <!-- Header -->
                   <tr>
                     <td style="background: #1e293b; padding: 40px; text-align: center;">
-                      <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                      <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                       <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Password Reset</h1>
                       <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
                     </td>
@@ -793,7 +793,7 @@ def create_candidate():
         ''', (name, email, phone, location, professional_title, experience_years, availability, bio, skills, hobbies, avatar_url, resume_url, video_url))
         conn.commit()
         conn.close()
-        log_action('CREATE_CANDIDATE', cursor.lastrowid)
+        log_action('CREATE_CANDIDATE', cursor.lastrowid, notes=f"Added: {name}")
         return redirect(url_for('candidates'))
     except Exception as e:
         return {"error": str(e)}, 500
@@ -1238,7 +1238,7 @@ def save_assignments():
                               <!-- Header -->
                               <tr>
                                 <td style="background: #1e293b; padding: 40px; text-align: center;">
-                                  <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                                  <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                                   <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">New Candidate Assigned</h1>
                                   <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
                                 </td>
@@ -1362,7 +1362,7 @@ def request_meeting_api():
                           <!-- Header -->
                           <tr>
                             <td style="background: #1e293b; padding: 40px; text-align: center;">
-                              <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                              <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                               <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;"><span style="color: #ef4444;">Urgent !!</span> Candidate Desired</h1>
                               <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Meeting Request • Karma Staff</p>
                             </td>
@@ -1509,7 +1509,7 @@ def update_meeting_status(meeting_id):
                           <!-- Header -->
                           <tr>
                             <td style="background: #1e293b; padding: 40px; text-align: center;">
-                              <img src="https://www.karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
+                              <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
                               <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Meeting Update</h1>
                               <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
                             </td>
@@ -2091,10 +2091,13 @@ def delete_candidate(id):
                     except:
                         pass
         
+        candidate_name = candidate.get('name', '')
+        reason = request.form.get('reason', '').strip()
         conn.execute("DELETE FROM candidates WHERE id = ?", (id,))
         conn.commit()
         conn.close()
-        log_action('DELETE_CANDIDATE', id)
+        notes = f"Candidate: {candidate_name}. Reason: {reason}" if reason else f"Candidate: {candidate_name}"
+        log_action('DELETE_CANDIDATE', id, notes=notes)
         return redirect(url_for('candidates'))
     except Exception as e:
         return {"error": str(e)}, 500

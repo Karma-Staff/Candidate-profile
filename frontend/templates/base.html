@@ -54,10 +54,12 @@
                 class="nav-item {{ 'active' if request.endpoint == 'assign_candidates' }}">
                 <i data-lucide="user-plus" style="width: 18px;"></i> Assign
             </a>
+            {% if user.role == 'admin' %}
             <a href="{{ url_for('user_management') }}"
                 class="nav-item {{ 'active' if request.endpoint in ['user_management', 'manage_users', 'add_user'] else '' }}">
                 <i data-lucide="settings" style="width: 18px;"></i> Users
             </a>
+            {% endif %}
             <a href="{{ url_for('ai_agent') }}" class="nav-item {{ 'active' if request.endpoint == 'ai_agent' }}">
                 <i data-lucide="bot" style="width: 18px;"></i> AI Agent
             </a>

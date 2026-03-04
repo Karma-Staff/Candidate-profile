@@ -93,14 +93,10 @@
                 <i data-lucide="edit-3" style="width: 18px;"></i> Edit Profile
             </a>
 
-            <form action="{{ url_for('delete_candidate', id=candidate.id) }}" method="POST"
-                onsubmit="return confirm('Are you sure you want to delete this candidate? This action cannot be undone.');"
-                style="display: inline;">
-                <button type="submit" class="btn btn-outline"
-                    style="background: #232b38; border: 1px solid rgba(255,255,255,0.1); color: #ef4444; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                    <i data-lucide="trash-2" style="width: 18px; color: #ef4444;"></i> Delete
-                </button>
-            </form>
+            <button type="button" onclick="openDeleteModal()"
+                style="background: #232b38; border: 1px solid rgba(255,255,255,0.1); color: #ef4444; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer;">
+                <i data-lucide="trash-2" style="width: 18px; color: #ef4444;"></i> Delete
+            </button>
 
             <button type="button" class="btn" onclick="document.getElementById('hireModal').style.display='flex'"
                 style="background: #e2f2ff; color: #3b82f6; padding: 0.75rem 1.5rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; border: none; margin-left: auto;">
@@ -400,6 +396,41 @@
     </div>
 </div>
 
+<!-- Delete Reason Modal -->
+<div id="deleteModal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div
+        style="background: #1e293b; color: white; margin: 10% auto; padding: 2.5rem; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 500px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <h2
+            style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i data-lucide="trash-2" style="color: #ef4444;"></i> Delete Candidate
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.9375rem; margin-bottom: 1.5rem;">You are about to permanently delete
+            <strong>{{ candidate.name }}</strong>. Please provide a reason for this action.
+        </p>
+
+        <form action="{{ url_for('delete_candidate', id=candidate.id) }}" method="POST" id="deleteForm">
+            <div style="margin-bottom: 2rem;">
+                <label for="deleteReason"
+                    style="display: block; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.5rem;">Reason
+                    for Deletion <span style="color: #ef4444;">*</span></label>
+                <textarea id="deleteReason" name="reason" rows="4" required
+                    style="width: 100%; padding: 0.75rem 1rem; border-radius: 10px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: inherit; resize: none; box-sizing: border-box;"
+                    placeholder="e.g. Candidate withdrew, position filled, etc."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="closeDeleteModal()"
+                    style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #94a3b8; cursor: pointer;">Cancel</button>
+                <button type="submit" id="confirmDeleteBtn"
+                    style="padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: none; background: #ef4444; color: white; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="trash-2" style="width: 16px;"></i> Confirm Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
     /* Tag/Badge hover effects */
     .badge:hover,
@@ -538,6 +569,17 @@
 
     function closeRejectModal() {
         document.getElementById('rejectModal').style.display = 'none';
+    }
+
+    function openDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'block';
+        document.getElementById('deleteReason').value = '';
+        document.getElementById('deleteReason').focus();
+        lucide.createIcons();
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
     }
 
     function submitRejection(candidateId) {
