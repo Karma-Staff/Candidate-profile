@@ -11,6 +11,36 @@
     </button>
 </div>
 
+<div class="animate-in delay-1" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center;">
+    <div
+        style="background: var(--glass); padding: 0.25rem; border-radius: 12px; display: flex; gap: 0.25rem; border: 1px solid var(--border);">
+        <button class="filter-btn active" onclick="filterLogs('ALL')"
+            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            All Logs
+        </button>
+        <button class="filter-btn" onclick="filterLogs('CREATE_CANDIDATE')"
+            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            Added Candidates
+        </button>
+        <button class="filter-btn" onclick="filterLogs('DELETE_CANDIDATE')"
+            style="padding: 0.5rem 1.25rem; border-radius: 8px; border: none; background: transparent; color: var(--text-light); font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;">
+            Deleted Candidates
+        </button>
+    </div>
+</div>
+
+<style>
+    .filter-btn.active {
+        background: var(--accent) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .filter-btn:not(.active):hover {
+        background: var(--glass-strong);
+    }
+</style>
+
 <div class="card animate-in delay-1" style="padding: 0; overflow: hidden;">
     <table class="data-table">
         <thead>
@@ -24,7 +54,7 @@
         </thead>
         <tbody>
             {% for log in logs %}
-            <tr>
+            <tr class="log-row" data-action="{{ log.action }}">
                 <td
                     style="white-space: nowrap; font-family: 'SF Mono', monospace; font-size: 0.8125rem; color: var(--text-light);">
                     {{ log.timestamp }}
@@ -34,7 +64,7 @@
                         <div class="avatar avatar-sm avatar-gradient" style="font-size: 0.6rem; flex-shrink: 0;">
                             {{ log.username[:2] | upper }}
                         </div>
-                        <span style="font-weight: 600;">{{ log.username }}</span>
+                        <span style="font-weight: 600;">admin : {{ log.username }}</span>
                     </div>
                 </td>
                 <td>
@@ -81,4 +111,31 @@
     <button class="page-btn">2</button>
     <button class="page-btn">3</button>
 </div>
+</div>
+
+<script>
+    function filterLogs(action) {
+        // Update active button state
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if ((action === 'ALL' && btn.innerText.includes('All')) ||
+                (action === 'CREATE_CANDIDATE' && btn.innerText.includes('Added')) ||
+                (action === 'DELETE_CANDIDATE' && btn.innerText.includes('Deleted'))) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Filter rows
+        const rows = document.querySelectorAll('.log-row');
+        rows.forEach(row => {
+            if (action === 'ALL' || row.dataset.action === action) {
+                row.style.display = '';
+                row.classList.add('animate-in');
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('animate-in');
+            }
+        });
+    }
+</script>
 {% endblock %}
