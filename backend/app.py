@@ -18,16 +18,6 @@ import string
 
 load_dotenv()
 
-# --- Email Logo (base64 embedded for reliability) ---
-import base64 as _base64
-_logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'static', 'images', 'logo_email.png')
-try:
-    with open(_logo_path, 'rb') as _f:
-        _logo_b64 = _base64.b64encode(_f.read()).decode('utf-8')
-    EMAIL_LOGO_SRC = f"data:image/png;base64,{_logo_b64}"
-except Exception:
-    # Fallback to hosted URL if local file is unavailable
-    EMAIL_LOGO_SRC = "{EMAIL_LOGO_SRC}"
 
 # --- Logging Configuration ---
 logging.basicConfig(
@@ -263,7 +253,7 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
         <!-- Header -->
         <tr>
           <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+            <img src="{request.host_url.rstrip('/') + url_for('static', filename='images/logo_email.png')}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
           </td>
         </tr>
         <!-- Accent Stripe -->
@@ -345,7 +335,7 @@ def send_forgot_password_email(to_email: str, username: str, temp_password: str,
         <!-- Header -->
         <tr>
           <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+            <img src="{request.host_url.rstrip('/') + url_for('static', filename='images/logo_email.png')}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
           </td>
         </tr>
         <!-- Accent Stripe -->
@@ -1273,7 +1263,7 @@ def save_assignments():
         <!-- Header -->
         <tr>
           <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+            <img src="{request.host_url.rstrip('/') + url_for('static', filename='images/logo_email.png')}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
           </td>
         </tr>
         <!-- Accent Stripe -->
@@ -1407,7 +1397,7 @@ def request_meeting_api():
         <!-- Header -->
         <tr>
           <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+            <img src="{request.host_url.rstrip('/') + url_for('static', filename='images/logo_email.png')}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
           </td>
         </tr>
         <!-- Accent Stripe -->
@@ -1556,7 +1546,7 @@ def update_meeting_status(meeting_id):
         <!-- Header -->
         <tr>
           <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
-            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+            <img src="{request.host_url.rstrip('/') + url_for('static', filename='images/logo_email.png')}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
           </td>
         </tr>
         <!-- Accent Stripe -->
