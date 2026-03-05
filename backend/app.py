@@ -18,6 +18,17 @@ import string
 
 load_dotenv()
 
+# --- Email Logo (base64 embedded for reliability) ---
+import base64 as _base64
+_logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'static', 'images', 'logo_email.png')
+try:
+    with open(_logo_path, 'rb') as _f:
+        _logo_b64 = _base64.b64encode(_f.read()).decode('utf-8')
+    EMAIL_LOGO_SRC = f"data:image/png;base64,{_logo_b64}"
+except Exception:
+    # Fallback to hosted URL if local file is unavailable
+    EMAIL_LOGO_SRC = "{EMAIL_LOGO_SRC}"
+
 # --- Logging Configuration ---
 logging.basicConfig(
     level=logging.INFO,
@@ -241,75 +252,72 @@ def send_welcome_email(to_email: str, username: str, plain_password: str, login_
     """Send a welcome / credential email to a newly created user via Resend."""
     from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
     try:
-        html_body = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
-            <tr>
-              <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                  <!-- Header -->
-                  <tr>
-                    <td style="background: #1e293b; padding: 40px; text-align: center;">
-                      <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Welcome to Karma Staff</h1>
-                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Talent Intelligence Platform</p>
-                    </td>
-                  </tr>
-                  <!-- Body -->
-                  <tr>
-                    <td style="padding: 48px 40px;">
-                      <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{username}</strong>,</p>
-                      <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
-                        Your account has been created on the <strong>Karma Staff portal</strong>.
-                        Find your secure login credentials below.
-                      </p>
+        html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background-color:#eef2f7;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
+            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+          </td>
+        </tr>
+        <!-- Accent Stripe -->
+        <tr><td style="background:linear-gradient(90deg,#3b82f6 0%,#06b6d4 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px 48px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;">Welcome aboard, {username}! &#127881;</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.7;">
+              Your Karma Staff account is ready. Use the credentials below to sign in and explore the Talent Intelligence Platform.
+            </p>
 
-                      <!-- Credentials Box -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
-                        <tr>
-                          <td style="padding: 24px 32px;">
-                            <p style="margin: 0 0 16px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Secure Credentials</p>
-                            <p style="margin: 0 0 12px; color: #1e293b; font-size: 15px;">
-                              <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Username:</span>
-                              <strong style="color: #0f172a;">{username}</strong>
-                            </p>
-                            <p style="margin: 0; color: #1e293b; font-size: 15px;">
-                              <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Password:</span>
-                              <strong style="color: #0f172a; font-family: 'SFMono-Regular', Consolas, monospace; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 14px;">{plain_password}</strong>
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <!-- Action Button -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-                        <tr>
-                          <td align="center">
-                            <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; transition: background 0.2s;">Login to the Platform</a>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
-                        If you did not expect this email, please contact your administrator.
-                      </p>
-                    </td>
-                  </tr>
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
-                      <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
-                    </td>
-                  </tr>
+            <!-- Credentials Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
+              <tr><td style="padding:20px 28px;">
+                <p style="margin:0 0 14px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Your Login Credentials</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr><td style="padding:10px 0;border-bottom:1px solid #e2e8f0;">
+                    <span style="color:#64748b;font-size:13px;font-weight:600;display:inline-block;width:100px;">Username</span>
+                    <span style="color:#0f172a;font-weight:700;">{username}</span>
+                  </td></tr>
+                  <tr><td style="padding:10px 0;">
+                    <span style="color:#64748b;font-size:13px;font-weight:600;display:inline-block;width:100px;">Password</span>
+                    <span style="font-family:'SFMono-Regular',Consolas,monospace;background:#e0f2fe;color:#0c4a6e;padding:3px 12px;border-radius:6px;font-size:14px;font-weight:700;">{plain_password}</span>
+                  </td></tr>
                 </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-        """
+              </td></tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td align="center">
+                <a href="{login_url}" style="display:inline-block;background:#1e3a5c;color:#ffffff;text-decoration:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;">Login to Platform &rarr;</a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;line-height:1.6;">
+              If you did not expect this email, please contact your administrator.
+            </p>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:20px 40px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.8;">
+              &copy; 2026 <strong>Karma Staff</strong> &bull; Talent Intelligence Platform
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
         params = {
             "from": from_email,
             "to": [to_email],
@@ -326,67 +334,66 @@ def send_forgot_password_email(to_email: str, username: str, temp_password: str,
     """Send a temporary password to a user who forgot their credentials."""
     from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
     try:
-        html_body = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
-            <tr>
-              <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                  <!-- Header -->
-                  <tr>
-                    <td style="background: #1e293b; padding: 40px; text-align: center;">
-                      <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Password Reset</h1>
-                      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
-                    </td>
-                  </tr>
-                  <!-- Body -->
-                  <tr>
-                    <td style="padding: 48px 40px;">
-                      <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{username}</strong>,</p>
-                      <p style="color: #475569; font-size: 16px; margin: 0 0 24px; line-height: 1.6;">
-                        We received a request to reset your password. We've generated a <strong>temporary password</strong> for you to access your account.
-                      </p>
-                      
-                      <!-- Temp Password Box -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
-                        <tr>
-                          <td style="padding: 24px 32px; text-align: center;">
-                            <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Temporary Password</p>
-                            <p style="margin: 0; color: #0f172a; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 24px; font-weight: 700; background: #e2e8f0; padding: 12px; border-radius: 8px; display: inline-block;">{temp_password}</p>
-                          </td>
-                        </tr>
-                      </table>
+        html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background-color:#eef2f7;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
+            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+          </td>
+        </tr>
+        <!-- Accent Stripe -->
+        <tr><td style="background:linear-gradient(90deg,#3b82f6 0%,#06b6d4 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px 48px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;">Password Reset Request</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.7;">
+              Hi <strong style="color:#0f172a;">{username}</strong>, we have generated a <strong>temporary password</strong> for your account. Use it to log in, then update your password immediately.
+            </p>
 
-                      <p style="color: #ef4444; font-size: 14px; font-weight: 600; margin: 0 0 24px; text-align: center;">
-                        Important: Please change this password immediately from your "View Profile" page after logging in.
-                      </p>
-                      
-                      <!-- Action Button -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-                        <tr>
-                          <td align="center">
-                            <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Login to Portal</a>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
-                      <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-        """
+            <!-- Temp Password Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1e3a5c 0%,#1e4d7b 100%);border-radius:14px;margin-bottom:12px;">
+              <tr><td style="padding:28px 40px;text-align:center;">
+                <p style="margin:0 0 8px;color:#93c5fd;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Temporary Password</p>
+                <p style="margin:0;font-family:'SFMono-Regular',Consolas,monospace;font-size:28px;font-weight:900;color:#ffffff;letter-spacing:0.1em;">{temp_password}</p>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 28px;font-size:12px;color:#ef4444;text-align:center;font-weight:600;">
+              &#9888; Please change this password immediately after logging in.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td align="center">
+                <a href="{login_url}" style="display:inline-block;background:#1e3a5c;color:#ffffff;text-decoration:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;">Login to Portal &rarr;</a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
+              If you did not request this, please contact your administrator immediately.
+            </p>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:20px 40px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.8;">
+              &copy; 2026 <strong>Karma Staff</strong> &bull; Talent Intelligence Platform
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
         params = {
             "from": from_email,
             "to": [to_email],
@@ -1256,58 +1263,67 @@ def save_assignments():
                     from_email = os.getenv('RESEND_FROM_EMAIL', 'onboarding@karmastaff.com')
                     login_url = request.host_url.rstrip('/') + url_for('login')
 
-                    html_body = f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
-                        <tr>
-                          <td align="center">
-                            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                              <!-- Header -->
-                              <tr>
-                                <td style="background: #1e293b; padding: 40px; text-align: center;">
-                                  <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-blue-on-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
-                                  <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">New Candidate Assigned</h1>
-                                  <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
-                                </td>
-                              </tr>
-                              <!-- Body -->
-                              <tr>
-                                <td style="padding: 48px 40px;">
-                                  <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{client_name}</strong>,</p>
-                                  <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
-                                    Admin has assigned a new candidate, <strong style="color: #0f172a;">{name}</strong>, to your portal.
-                                    You can now view their full profile, technical grades, and introduction videos.
-                                  </p>
+                    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background-color:#eef2f7;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
+            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+          </td>
+        </tr>
+        <!-- Accent Stripe -->
+        <tr><td style="background:linear-gradient(90deg,#3b82f6 0%,#06b6d4 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px 48px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;">New Candidate Assigned &#127775;</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.7;">
+              Hi <strong style="color:#0f172a;">{client_name}</strong>, great news! A new candidate has been added to your portal.
+            </p>
 
-                                  <!-- Action Button -->
-                                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-                                    <tr>
-                                      <td align="center">
-                                        <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Profile in Portal</a>
-                                      </td>
-                                    </tr>
-                                  </table>
-                                  
-                                  <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
-                                    If you have any questions regarding this candidate, please reach out to your account manager.
-                                  </p>
-                                </td>
-                              </tr>
-                              <!-- Footer -->
-                              <tr>
-                                <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
-                                  <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-                    </body>
-                    </html>
-                    """
+            <!-- Candidate Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;margin-bottom:28px;">
+              <tr><td style="padding:20px 28px;">
+                <p style="margin:0 0 12px;color:#0369a1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Candidate Details</p>
+                <p style="margin:0;font-size:18px;font-weight:800;color:#0f172a;">{name}</p>
+                <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Newly added to your Karma Staff portal</p>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;">
+              You can now view their full profile, technical grades, and introduction videos directly on the platform.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td align="center">
+                <a href="{login_url}" style="display:inline-block;background:#1e3a5c;color:#ffffff;text-decoration:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;">View Profile in Portal &rarr;</a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
+              Questions? Contact your Karma Staff account manager.
+            </p>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:20px 40px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.8;">
+              &copy; 2026 <strong>Karma Staff</strong> &bull; Talent Intelligence Platform
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
                     
                     params = {
                         "from": from_email,
@@ -1380,70 +1396,73 @@ def request_meeting_api():
         for email_to in receiver_emails:
             try:
                 login_url = request.host_url.rstrip('/') + url_for('meetings')
-                html_body = f"""
-                <!DOCTYPE html>
-                <html>
-                <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
-                    <tr>
-                      <td align="center">
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                          <!-- Header -->
-                          <tr>
-                            <td style="background: #1e293b; padding: 40px; text-align: center;">
-                              <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
-                              <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;"><span style="color: #ef4444;">Urgent !!</span> Candidate Desired</h1>
-                              <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Meeting Request • Karma Staff</p>
-                            </td>
-                          </tr>
-                          <!-- Body -->
-                          <tr>
-                            <td style="padding: 48px 40px;">
-                              <p style="color: #475569; font-size: 16px; margin: 0 0 24px;">New Meeting Request Received:</p>
-                              
-                              <!-- Details Box -->
-                              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
-                                <tr>
-                                  <td style="padding: 32px;">
-                                    <p style="margin: 0 0 16px; color: #1e293b; font-size: 15px;">
-                                      <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Client:</span>
-                                      <strong style="color: #0f172a;">{client_name}</strong> <span style="color: #94a3b8; font-size: 13px;">({client_email})</span>
-                                    </p>
-                                    <p style="margin: 0; color: #1e293b; font-size: 15px;">
-                                      <span style="display: inline-block; width: 100px; color: #64748b; font-weight: 600;">Candidate:</span>
-                                      <strong style="color: #0f172a;">{candidate_name}</strong>
-                                    </p>
-                                  </td>
-                                </tr>
-                              </table>
+                html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background-color:#eef2f7;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
+            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+          </td>
+        </tr>
+        <!-- Accent Stripe -->
+        <tr><td style="background:linear-gradient(90deg,#3b82f6 0%,#06b6d4 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px 48px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;">&#128680; New Meeting Request</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.7;">
+              A client has submitted a new meeting request on the platform. Please review and take action.
+            </p>
 
-                              <p style="color: #475569; font-size: 15px; margin: 0 0 32px; line-height: 1.6;">
-                                The client has requested to book an appointment with this candidate. Please log in to manage this request and schedule the session.
-                              </p>
-                              
-                              <!-- Action Button -->
-                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-                                <tr>
-                                  <td align="center">
-                                    <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">Manage Meeting Request</a>
-                                  </td>
-                                </tr>
-                              </table>
-                            </td>
-                          </tr>
-                          <!-- Footer -->
-                          <tr>
-                            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
-                              <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </body>
-                </html>
-                """
+            <!-- Details Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;margin-bottom:28px;">
+              <tr><td style="padding:20px 28px;">
+                <p style="margin:0 0 14px;color:#92400e;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Request Details</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #fde68a;">
+                    <span style="color:#78716c;font-size:13px;font-weight:600;display:inline-block;width:110px;">Client</span>
+                    <strong style="color:#0f172a;">{client_name}</strong>
+                    <span style="color:#a8a29e;font-size:12px;"> ({client_email})</span>
+                  </td></tr>
+                  <tr><td style="padding:8px 0;">
+                    <span style="color:#78716c;font-size:13px;font-weight:600;display:inline-block;width:110px;">Candidate</span>
+                    <strong style="color:#0f172a;">{candidate_name}</strong>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;">
+              Please log in to the platform to manage this request and schedule a session.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td align="center">
+                <a href="{login_url}" style="display:inline-block;background:#1e3a5c;color:#ffffff;text-decoration:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;">Manage Meeting Request &rarr;</a>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:20px 40px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.8;">
+              &copy; 2026 <strong>Karma Staff</strong> &bull; Talent Intelligence Platform
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
                 params = {
                     "from": from_email,
                     "to": [email_to],
@@ -1527,69 +1546,70 @@ def update_meeting_status(meeting_id):
                 status_msg = status_messages.get(new_status, f"Your meeting request for <strong>{candidate_name}</strong> has been updated to <strong>{new_status}</strong>.")
                 subject = f"Meeting Status Update: {new_status}"
                 
-                html_body = f"""
-                <!DOCTYPE html>
-                <html>
-                <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7fa; color: #1e293b; margin: 0; padding: 0;">
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 40px 0;">
-                    <tr>
-                      <td align="center">
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
-                          <!-- Header -->
-                          <tr>
-                            <td style="background: #1e293b; padding: 40px; text-align: center;">
-                              <img src="https://karmastaff.com/wp-content/uploads/2023/11/Karma-Staff-logo_cmyk-white-600.png" alt="Karma Staff Logo" style="height: 60px; margin-bottom: 20px;">
-                              <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Meeting Update</h1>
-                              <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Karma Staff Talent Intelligence</p>
-                            </td>
-                          </tr>
-                          <!-- Body -->
-                          <tr>
-                            <td style="padding: 48px 40px;">
-                              <p style="color: #475569; font-size: 16px; margin: 0 0 16px;">Hi <strong style="color: #0f172a;">{client_name}</strong>,</p>
-                              <p style="color: #475569; font-size: 16px; margin: 0 0 32px; line-height: 1.6;">
-                                {status_msg}
-                              </p>
-                              
-                              <!-- Status Detail Box -->
-                              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 32px;">
-                                <tr>
-                                  <td style="padding: 32px;">
-                                    <p style="margin: 0; color: #1e293b; font-size: 16px;">
-                                      <span style="display: inline-block; width: 140px; color: #64748b; font-weight: 600;">Updated Status:</span>
-                                      <strong style="color: {'#10b981' if new_status in ['Accepted', 'Completed'] else '#3b82f6' if new_status == 'Scheduled' else '#ef4444' if new_status == 'Cancelled' else '#f59e0b'}; text-transform: uppercase; letter-spacing: 0.05em;">{new_status}</strong>
-                                    </p>
-                                  </td>
-                                </tr>
-                              </table>
+                html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background-color:#eef2f7;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+        <!-- Header -->
+        <tr>
+          <td align="center" style="background:#1a3550;padding:32px 40px 28px;border-radius:16px 16px 0 0;">
+            <img src="{EMAIL_LOGO_SRC}" alt="Karma Staff" width="93" height="60" style="height:60px;width:auto;display:block;margin:0 auto;">
+          </td>
+        </tr>
+        <!-- Accent Stripe -->
+        <tr><td style="background:linear-gradient(90deg,#3b82f6 0%,#06b6d4 100%);height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px 48px;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:800;color:#0f172a;">Meeting Status Update &#128467;</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.7;">
+              Hi <strong style="color:#0f172a;">{client_name}</strong>, here is an update on your meeting request.
+            </p>
 
-                              <!-- Action Button -->
-                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-                                <tr>
-                                  <td align="center">
-                                    <a href="{login_url}" style="display: inline-block; background: #1e293b; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700;">View Details in Portal</a>
-                                  </td>
-                                </tr>
-                              </table>
-                              
-                              <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
-                                If you have any questions, please reply to this email or contact support.
-                              </p>
-                            </td>
-                          </tr>
-                          <!-- Footer -->
-                          <tr>
-                            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #f1f5f9; text-align: center;">
-                              <p style="color: #cbd5e1; font-size: 12px; margin: 0;">&copy; 2026 Karma Staff &bull; Candidate Profile Platform</p>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </body>
-                </html>
-                """
+            <!-- Status Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
+              <tr><td style="padding:20px 28px;">
+                <p style="margin:0 0 12px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;">Meeting Details</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                    <span style="color:#64748b;font-size:13px;font-weight:600;display:inline-block;width:110px;">Candidate</span>
+                    <strong style="color:#0f172a;">{candidate_name}</strong>
+                  </td></tr>
+                  <tr><td style="padding:8px 0;">
+                    <span style="color:#64748b;font-size:13px;font-weight:600;display:inline-block;width:110px;">New Status</span>
+                    <strong style="color:#1e3a5c;text-transform:uppercase;font-size:13px;">{new_status}</strong>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;">{status_msg}</p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr><td align="center">
+                <a href="{login_url}" style="display:inline-block;background:#1e3a5c;color:#ffffff;text-decoration:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;">View Details in Portal &rarr;</a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">
+              If you have any questions, please reply to this email or contact support.
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f1f5f9;padding:20px 40px;border-radius:0 0 16px 16px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.8;">&copy; 2026 <strong>Karma Staff</strong> &bull; Talent Intelligence Platform</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
                 
                 params = {
                     "from": from_email,
