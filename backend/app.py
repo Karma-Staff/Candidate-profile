@@ -2132,6 +2132,13 @@ def delete_candidate(id):
         
         candidate_name = candidate.get('name', '')
         reason = request.form.get('reason', '').strip()
+
+        # Delete all related child rows first to avoid FOREIGN KEY constraint errors
+        conn.execute("DELETE FROM assignments WHERE candidate_id = ?", (id,))
+        conn.execute("DELETE FROM meetings WHERE candidate_id = ?", (id,))
+        conn.execute("DELETE FROM rejections WHERE candidate_id = ?", (id,))
+        conn.execute("DELETE FROM feedbacks WHERE candidate_id = ?", (id,))
+
         conn.execute("DELETE FROM candidates WHERE id = ?", (id,))
         conn.commit()
         conn.close()
