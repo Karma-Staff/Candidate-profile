@@ -1699,6 +1699,42 @@ def submit_feedback_api():
         logger.error(f"Feedback error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/rejections/<int:id>', methods=['DELETE'])
+@require_role('admin', 'cs')
+def delete_rejection(id):
+    try:
+        conn = get_db_connection()
+        row = conn.execute("SELECT id FROM rejections WHERE id = ?", (id,)).fetchone()
+        if not row:
+            conn.close()
+            return jsonify({'error': 'Rejection not found'}), 404
+        conn.execute("DELETE FROM rejections WHERE id = ?", (id,))
+        conn.commit()
+        conn.close()
+        log_action('DELETE_REJECTION', id)
+        return jsonify({'status': 'success', 'message': 'Rejection deleted'})
+    except Exception as e:
+        logger.error(f"Delete rejection error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feedbacks/<int:id>', methods=['DELETE'])
+@require_role('admin', 'cs')
+def delete_feedback(id):
+    try:
+        conn = get_db_connection()
+        row = conn.execute("SELECT id FROM feedbacks WHERE id = ?", (id,)).fetchone()
+        if not row:
+            conn.close()
+            return jsonify({'error': 'Feedback not found'}), 404
+        conn.execute("DELETE FROM feedbacks WHERE id = ?", (id,))
+        conn.commit()
+        conn.close()
+        log_action('DELETE_FEEDBACK', id)
+        return jsonify({'status': 'success', 'message': 'Feedback deleted'})
+    except Exception as e:
+        logger.error(f"Delete feedback error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/candidate/<int:id>')
 @require_role('admin', 'cs', 'client')
 def candidate_profile(id):
