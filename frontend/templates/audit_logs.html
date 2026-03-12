@@ -98,9 +98,9 @@
                 <td>
                     <div style="display: flex; align-items: center; gap: 0.625rem;">
                         <div class="avatar avatar-sm avatar-gradient" style="font-size: 0.6rem; flex-shrink: 0;">
-                            {{ log.username[:2] | upper }}
+                            {{ (log.username or '??')[:2] | upper }}
                         </div>
-                        <span style="font-weight: 600;">admin : {{ log.username }}</span>
+                        <span style="font-weight: 600;">{{ log.username or 'Unknown User' }}</span>
                     </div>
                 </td>
                 <td>
